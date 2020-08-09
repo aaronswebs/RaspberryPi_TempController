@@ -1,9 +1,20 @@
 import glob
 import time
 
-# devices
-# 28-00000b854aa2 is the high temp DS18B20
-# 28-03166479d9ff is the normal DS18B20
+# temp sensor devices
+# 28-00000b854aa2 is the hightemp cable DS18B20
+# 28-03166479d9ff is the normal cable DS18B20
+#example usage
+# from w1thermsensor import W1ThermSensor
+#for sensor in W1ThermSensor.get_available_sensors():
+#    print("Sensor %s has temperature %.2f" % (sensor.id, sensor.get_temperature()))
+# sensor = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "00000588806a")
+# temperature_in_celsius = sensor.get_temperature()
+# temperature_in_fahrenheit = sensor.get_temperature(W1ThermSensor.DEGREES_F)
+# temperature_in_all_units = sensor.get_temperatures([
+#     W1ThermSensor.DEGREES_C,
+#     W1ThermSensor.DEGREES_F,
+#     W1ThermSensor.KELVIN])
 
 base_dir = '/sys/bus/w1/devices/'
 
