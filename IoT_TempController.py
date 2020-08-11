@@ -69,9 +69,6 @@ lcd.color = [100, 0, 0]
 CONNECTION_STRING = "HostName=iotbrew.azure-devices.net;DeviceId=brew-rpi;SharedAccessKey=QWAixdM8EYoBMDyUL7kqcXfA/Tddx6oE62s6KERGNJI="
 
 # Define the JSON message to send to IoT Hub.
-TEMPERATURE = bme280.temperature
-PRESSURE = bme280.pressure
-HUMIDITY = bme280.humidity
 MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor1_temp\": %.2f,\"sensor2_temp\": %.2f}"
 
 def read_temp_raw(tempdevice_file):
