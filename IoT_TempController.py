@@ -110,7 +110,7 @@ def iothub_client_telemetry_run():
         print ("\nStopped IoT Messages and Device")
 
 def print_readings():
-  print ("\nTemperature: %0.1f%sC" % sensor.ambientTemp, chr(223))
+  print ("\nTemperature: %0.1f C" % sensor.ambientTemp)
   print ("LoTemp: %0.1f%sC" % sensor.LoTempDS18B20, chr(223))
   print ("HiTemp: %0.1f%sC" % sensor.HiTempDS18B20, chr(223))
   print ("Humidity: %0.1f %%" % sensor.humidity)
