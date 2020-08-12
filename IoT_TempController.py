@@ -41,6 +41,7 @@ MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor
 
 # define degrees sign character
 degrees_symbol = u'\N{DEGREE SIGN}'
+lcd_degrees = chr(223)
 
 def get_mean_sea_level_pressure():
   # Make a GET request to fetch the raw HTML content
@@ -132,13 +133,15 @@ def set_lcd_color(temperature):
 def write_lcd():
   # put values on LCD
   #temperature = sensor.ambientTemp
-  lcd.message = "Temp: %0.2f%sC\nLoTemp: %0.2f%s" % (sensor.ambientTemp, degrees_symbol, sensor.LoTempDS18B20, degrees_symbol)
+  lcd.message = "Temp: %0.2f%sC\nLoTemp: %0.2f%sC" % (sensor.ambientTemp, lcd_degrees, sensor.LoTempDS18B20, lcd_degrees)
 
 if __name__ == '__main__':
     print ( "IoT Hub client started" )
     #iothub_client_telemetry_run()
     sensor = sensors()
-    sensor.get_values()
-    set_lcd_color(sensor.ambientTemp)
-    print_readings()
-    write_lcd()
+    while True:
+      sensor.get_values()
+      set_lcd_color(sensor.ambientTemp)
+      print_readings()
+      write_lcd()
+      time.sleep(5)
