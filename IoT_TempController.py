@@ -116,7 +116,7 @@ def print_readings():
   print ("\nTemperature: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
   print ("LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, degrees_symbol))
   print ("HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, degrees_symbol))
-  print ("Humidity: %0.1f %%" % sensor.humidity)
+  print ("Humidity: %0.1f%%" % sensor.humidity)
   print ("Pressure: %0.1f hPa" % sensor.pressure)
   print ("Altitude = %0.2f meters" % sensor.altitude)
   print ("Dewpoint: %0.1f%sC" % (sensor.dewpoint, degrees_symbol))
@@ -131,8 +131,8 @@ def set_lcd_color(temperature):
 
 def write_lcd():
   # put values on LCD
-  temperature = sensor.ambientTemp
-  lcd.message = "Temp: %0.2f C\nTime: %s" % (temperature, datetime.datetime.now().time())
+  #temperature = sensor.ambientTemp
+  lcd.message = "Temp: %0.2f%sC\nLoTemp: %0.2f%s" % (sensor.ambientTemp, degrees_symbol, sensor.LoTempDS18B20, degrees_symbol)
 
 if __name__ == '__main__':
     print ( "IoT Hub client started" )
@@ -141,3 +141,4 @@ if __name__ == '__main__':
     sensor.get_values()
     set_lcd_color(sensor.ambientTemp)
     print_readings()
+    write_lcd()
