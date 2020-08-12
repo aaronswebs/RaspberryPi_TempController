@@ -39,6 +39,9 @@ CONNECTION_STRING = "HostName=iotbrew.azure-devices.net;DeviceId=brew-rpi;Shared
 # Define the JSON message to send to IoT Hub.
 MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor1_temp\": %.2f,\"sensor2_temp\": %.2f,\"dewpoint\": %.2f}"
 
+# define degrees sign character
+degrees_symbol = u'\N{DEGREE SIGN}'
+
 def get_mean_sea_level_pressure():
   # Make a GET request to fetch the raw HTML content
   url = "http://www.bom.gov.au/vic/observations/vicall.shtml?ref=hdr"
@@ -110,13 +113,13 @@ def iothub_client_telemetry_run():
         print ("\nStopped IoT Messages and Device")
 
 def print_readings():
-  print ("\nTemperature: %0.1f C" % sensor.ambientTemp)
-  print ("LoTemp: %0.1f%sC" % sensor.LoTempDS18B20, chr(223))
-  print ("HiTemp: %0.1f%sC" % sensor.HiTempDS18B20, chr(223))
+  print ("\nTemperature: %0.1f%sC" % sensor.ambientTemp, degrees_symbol)
+  print ("LoTemp: %0.1f%sC" % sensor.LoTempDS18B20, degrees_symbol)
+  print ("HiTemp: %0.1f%sC" % sensor.HiTempDS18B20, degrees_symbol)
   print ("Humidity: %0.1f %%" % sensor.humidity)
   print ("Pressure: %0.1f hPa" % sensor.pressure)
   print ("Altitude = %0.2f meters" % sensor.altitude)
-  print ("Dewpoint: %0.1f%sC" % sensor.dewpoint, chr(223))
+  print ("Dewpoint: %0.1f%sC" % sensor.dewpoint, degrees_symbol)
             
 def set_lcd_color(temperature):
   if temperature < 18:
