@@ -3,13 +3,13 @@ import time
 import glob
 import math
 import datetime
-#prerequisite installs are:
-#pip3 install adafruit-circuitpython-charlcd 
-#pip3 install adafruit-circuitpython-bme280
-#pip3 install RPI.GPIO
-#pip3 install azure-iot-device
-#pip3 install w1thermsensor
-#sudo pip3 is required for installing for all users eg:root
+# prerequisite installs are:
+# pip3 install adafruit-circuitpython-charlcd 
+# pip3 install adafruit-circuitpython-bme280
+# pip3 install RPI.GPIO
+# pip3 install azure-iot-device
+# pip3 install w1thermsensor
+# sudo pip3 is required for installing for all users eg:root
 import board
 import busio
 import adafruit_bme280
@@ -42,16 +42,13 @@ lcd_rows = 2
 base_dir = '/sys/bus/w1/devices/'
 devices_folder = glob.glob(base_dir + '28*')
 
-# Initialise I2C bus.
+# Create library object using our Bus I2C port
 i2c = busio.I2C(board.SCL, board.SDA)
+bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c)
 
 # Initialise the LCD class
 lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
 lcd.clear()
-
-# Create library object using our Bus I2C port
-i2c = busio.I2C(board.SCL, board.SDA)
-bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c)
 
 #set variables for dewpoint calc
 b = 17.62
@@ -72,9 +69,6 @@ lcd.color = [100, 0, 0]
 CONNECTION_STRING = "HostName=iotbrew.azure-devices.net;DeviceId=brew-rpi;SharedAccessKey=QWAixdM8EYoBMDyUL7kqcXfA/Tddx6oE62s6KERGNJI="
 
 # Define the JSON message to send to IoT Hub.
-TEMPERATURE = bme280.temperature
-PRESSURE = bme280.pressure
-HUMIDITY = bme280.humidity
 MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor1_temp\": %.2f,\"sensor2_temp\": %.2f}"
 
 def read_temp_raw(tempdevice_file):
