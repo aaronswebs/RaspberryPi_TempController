@@ -110,13 +110,13 @@ def iothub_client_telemetry_run():
         print ("\nStopped IoT Messages and Device")
 
 def print_readings():
-  print ("\nTemperature: %0.1f%sC" % chr(223), sensor.ambientTemp)
-  print ("LoTemp: %0.1f%sC" % chr(223), sensor.LoTempDS18B20)
-  print ("HiTemp: %0.1f%sC" % chr(223), sensor.HiTempDS18B20)
+  print ("\nTemperature: %0.1f%sC" % sensor.ambientTemp, chr(223))
+  print ("LoTemp: %0.1f%sC" % sensor.LoTempDS18B20, chr(223))
+  print ("HiTemp: %0.1f%sC" % sensor.HiTempDS18B20, chr(223))
   print ("Humidity: %0.1f %%" % sensor.humidity)
   print ("Pressure: %0.1f hPa" % sensor.pressure)
   print ("Altitude = %0.2f meters" % sensor.altitude)
-  print ("Dewpoint: %0.1f%sC" % chr(223), sensor.dewpoint)
+  print ("Dewpoint: %0.1f%sC" % sensor.dewpoint, chr(223))
             
 def set_lcd_color(temperature):
   if temperature < 18:
