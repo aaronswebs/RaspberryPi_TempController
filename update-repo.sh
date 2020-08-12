@@ -1,2 +1,2 @@
 #!/bin/bash
-git pull origin multi-thread_v1
+git pull origin multi-thread_v2
