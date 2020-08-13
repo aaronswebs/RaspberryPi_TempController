@@ -54,6 +54,7 @@ class sensors():
     self.humidity = bme280.humidity
     self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
     self.altitude = bme280.altitude
+    print("\nTime: %s\nget_values" % datetime.datetime.now().time())
 
 
 def set_mean_sea_level_pressure():
@@ -158,8 +159,8 @@ def write_lcd_message(line1, line2, msgDisplayTime):
     msgLength = len(line1)
   else:
     msgLength = len(line2)
-  scroll_lcd_text(msgLength,msgDisplayTime)
-  #time.sleep(textDelay)
+  #scroll_lcd_text(msgLength,msgDisplayTime)
+  print("\nTime: %s\nwrite_lcd_message" % (datetime.datetime.now().time()))
 
 def write_lcd():
   # put values on LCD
@@ -194,6 +195,6 @@ if __name__ == '__main__':
     t_set_msl_pressure.start()
     #t_get_sensor_val.start()
     #t_set_lcd_color.start()
-    t_print_sensor_val.start()
+    #t_print_sensor_val.start()
     t_write_lcd.start()
     #t_iothub_client.start()
