@@ -135,8 +135,8 @@ def set_lcd_color(temperature):
   else:
     lcd.color = [100,0,0]
 
-def scroll_lcd_text(lengthOfMessage, time):
-  speed = (lengthOfMessage-16)/time/2
+def scroll_lcd_text(lengthOfMessage, displayTime):
+  speed = ((lengthOfMessage-16)/time/2)
   for i in range(lengthOfMessage-16):
     lcd.move_left()
     time.sleep(speed)
