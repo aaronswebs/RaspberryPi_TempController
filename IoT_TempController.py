@@ -15,6 +15,8 @@ import threading
 # The sample connects to a device-specific MQTT endpoint on your IoT Hub.
 from azure.iot.device import IoTHubDeviceClient, Message
 
+DEBUG = True
+
 # Modify this if you have a different sized Character LCD
 lcd_columns = 16
 lcd_rows = 2
@@ -137,19 +139,24 @@ def set_lcd_color(temperature):
     lcd.color = [100,0,0]
 
 def scroll_lcd_text(lengthOfMessage, displayTime):
+  if DEBUG:
+    print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
   if lengthOfMessage > 16:
     speed = (displayTime/((lengthOfMessage-16)*2))
   else:
-    speed = displayTime/2
-  print("\nTime: %s\nLength of message is: %i\nSpeed of message is: %0.2f" % (datetime.datetime.now().time(), lengthOfMessage, speed))
+    speed = (displayTime)/2
   for i in range(lengthOfMessage-16):
     lcd.move_left()
     time.sleep(speed)
   for i in range(lengthOfMessage-16):
     lcd.move_right()
     time.sleep(speed)
+  if DEBUG:
+    print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
 
 def write_lcd_message(line1, line2, msgDisplayTime):
+  if DEBUG:
+    print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
   lcd.clear()
   lcd.cursor_position(0,0)
   lcd.message = line1
@@ -159,17 +166,20 @@ def write_lcd_message(line1, line2, msgDisplayTime):
     msgLength = len(line1)
   else:
     msgLength = len(line2)
-  #scroll_lcd_text(msgLength,msgDisplayTime)
-  print("\nTime: %s\nwrite_lcd_message" % (datetime.datetime.now().time()))
-
+  scroll_lcd_text(msgLength,msgDisplayTime)
+  if DEBUG:
+    print("Exiting write_lcd_message, %s" % datetime.datetime.now().time())
+  
 def write_lcd():
   # put values on LCD
+  if DEBUG:
+    print("Entering write_lcd, %s" % datetime.datetime.now().time())
   msgDisplayTime = 2
   while True:
     sensor.get_values()
     set_lcd_color(sensor.ambientTemp)
     line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
-    line2 = "Pressure: %0.1fhPa" % (sensor.pressure)
+    line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
     write_lcd_message(line1, line2, msgDisplayTime)
     
     sensor.get_values()
@@ -181,6 +191,8 @@ def write_lcd():
     line1 = "Humidity: %0.1f%%" % (sensor.humidity)
     line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
     write_lcd_message(line1, line2, msgDisplayTime)
+    if DEBUG:
+      print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
 if __name__ == '__main__':
     print ( "IoT Hub client started" )
@@ -195,6 +207,6 @@ if __name__ == '__main__':
     t_set_msl_pressure.start()
     #t_get_sensor_val.start()
     #t_set_lcd_color.start()
-    #t_print_sensor_val.start()
+    t_print_sensor_val.start()
     t_write_lcd.start()
     #t_iothub_client.start()
