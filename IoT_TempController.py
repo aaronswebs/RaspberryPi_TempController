@@ -9,6 +9,7 @@ from w1thermsensor import W1ThermSensor
 import sensorConstant
 from bs4 import BeautifulSoup
 import requests
+import threading
 # Using the Python Device SDK for IoT Hub:
 #   https://github.com/Azure/azure-iot-sdk-python
 # The sample connects to a device-specific MQTT endpoint on your IoT Hub.
@@ -43,7 +44,27 @@ MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor
 degrees_symbol = u'\N{DEGREE SIGN}'
 lcd_degrees = chr(223)
 
-def get_mean_sea_level_pressure():
+class sensors():
+  def __init__(self):
+    self.LoTempDS18B20 = 0.0
+    self.HiTempDS18B20 = 0.0
+    self.ambientTemp = 0.0
+    self.pressure = 0.0
+    self.humidity = 0.0
+    self.dewpoint = 0.0
+    self.altitude = 0.0
+
+  def get_values(self):
+    self.LoTempDS18B20 = LoTempDS18B20.get_temperature()
+    self.HiTempDS18B20 = HiTempDS18B20.get_temperature()
+    self.ambientTemp = bme280.temperature
+    self.pressure = bme280.pressure
+    self.humidity = bme280.humidity
+    self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
+    self.altitude = bme280.altitude
+
+
+def set_mean_sea_level_pressure():
   # Make a GET request to fetch the raw HTML content
   url = "http://www.bom.gov.au/vic/observations/vicall.shtml?ref=hdr"
   try:
@@ -62,27 +83,7 @@ def get_mean_sea_level_pressure():
   soup = BeautifulSoup(html_content, "lxml")
   tableCell = soup.find("td", attrs={"headers":"tCEN-press tCEN-station-melbourne-olympic-park"})
   meanSeaLevelPressure = float(tableCell.string)
-  return meanSeaLevelPressure
-
-class sensors():
-  def __init__(self):
-    self.LoTempDS18B20 = 0.0
-    self.HiTempDS18B20 = 0.0
-    self.ambientTemp = 0.0
-    self.pressure = 0.0
-    self.humidity = 0.0
-    self.dewpoint = 0.0
-    self.altitude = 0.0
-
-  def get_values(self):
-    self.LoTempDS18B20 = LoTempDS18B20.get_temperature()
-    self.HiTempDS18B20 = HiTempDS18B20.get_temperature()
-    self.ambientTemp = bme280.temperature
-    self.pressure = bme280.pressure
-    self.humidity = bme280.humidity
-    self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
-    bme280.sea_level_pressure = get_mean_sea_level_pressure()
-    self.altitude = bme280.altitude
+  bme280.sea_level_pressure = meanSeaLevelPressure
 
 def iothub_client_init():
     # Create an IoT Hub client
@@ -113,14 +114,18 @@ def iothub_client_telemetry_run():
     except KeyboardInterrupt:
         print ("\nStopped IoT Messages and Device")
 
-def print_readings():
-  print ("\nTemperature: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
-  print ("LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, degrees_symbol))
-  print ("HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, degrees_symbol))
-  print ("Humidity: %0.1f%%" % sensor.humidity)
-  print ("Pressure: %0.1f hPa" % sensor.pressure)
-  print ("Altitude = %0.2f meters" % sensor.altitude)
-  print ("Dewpoint: %0.1f%sC" % (sensor.dewpoint, degrees_symbol))
+def print_sensor_values():
+  while True:
+    #lcd is getting sensor values every two seconds.
+    #sensor.get_values()  
+    print ("\nTemperature: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
+    print ("LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, degrees_symbol))
+    print ("HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, degrees_symbol))
+    print ("Humidity: %0.1f%%" % sensor.humidity)
+    print ("Pressure: %0.1f hPa" % sensor.pressure)
+    print ("Altitude = %0.2f meters" % sensor.altitude)
+    print ("Dewpoint: %0.1f%sC" % (sensor.dewpoint, degrees_symbol))
+    time.sleep(5)
             
 def set_lcd_color(temperature):
   if temperature < 18:
@@ -132,16 +137,50 @@ def set_lcd_color(temperature):
 
 def write_lcd():
   # put values on LCD
-  #temperature = sensor.ambientTemp
-  lcd.message = "Temp: %0.2f%sC\nLoTemp: %0.2f%sC" % (sensor.ambientTemp, lcd_degrees, sensor.LoTempDS18B20, lcd_degrees)
+  while True:
+    sensor.get_values()
+    set_lcd_color(sensor.ambientTemp)
+    lcdAmbient = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
+    lcdPressure = "Pressure: %0.1fhpa" % (sensor.pressure)
+    lcd.cursor_position(0,0)
+    lcd.message = lcdAmbient
+    lcd.cursor_position(0,1)
+    lcd.message = lcdPressure
+    time.sleep(2)
+    sensor.get_values()
+    lcdLoTemp = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
+    lcdHiTemp = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
+    lcd.cursor_position(0,0)
+    lcd.message = lcdLoTemp
+    lcd.cursor_position(0,1)
+    lcd.message = lcdHiTemp
+    time.sleep(2)
+    sensor.get_values()
+    lcdHumid = "Humidity: %0.1f%%" % (sensor.humidity)
+    lcdDew = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
+    lcd.cursor_position(0,0)
+    lcd.message = lcdHumid
+    lcd.cursor_position(0,1)
+    lcd.message = lcdDew
+    time.sleep(2)
+
+  # for i in range(len(lcd.message)+16):
+  #   lcd.move_right()
+  #   time.sleep(0.5)
 
 if __name__ == '__main__':
     print ( "IoT Hub client started" )
-    #iothub_client_telemetry_run()
     sensor = sensors()
-    while True:
-      sensor.get_values()
-      set_lcd_color(sensor.ambientTemp)
-      print_readings()
-      write_lcd()
-      time.sleep(5)
+    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure)
+    #t_get_sensor_val = threading.Thread(target=sensor.get_values)
+    #t_set_lcd_color = threading.Thread(target=set_lcd_color, args=(sensor.ambientTemp))
+    t_print_sensor_val = threading.Thread(target=print_sensor_values)
+    t_write_lcd = threading.Thread(target=write_lcd)
+    t_iothub_client = threading.Thread(target=iothub_client_telemetry_run)
+    
+    t_set_msl_pressure.start()
+    #t_get_sensor_val.start()
+    #t_set_lcd_color.start()
+    t_print_sensor_val.start()
+    t_write_lcd.start()
+    #t_iothub_client.start()
