@@ -15,7 +15,7 @@ import threading
 # The sample connects to a device-specific MQTT endpoint on your IoT Hub.
 from azure.iot.device import IoTHubDeviceClient, Message
 
-DEBUG = True
+DEBUG = False
 
 # Modify this if you have a different sized Character LCD
 lcd_columns = 16
@@ -28,7 +28,7 @@ bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c)
 # Initialise the LCD class
 lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
 lcd.clear()
-lcd.color = [100, 0, 0]
+lcd.color = [100, 100, 100]
 
 # Initialise the temp sensors
 LoTempDS18B20 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, sensorConstant.normaltempSensor)
@@ -200,16 +200,21 @@ def write_lcd():
       print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
 if __name__ == '__main__':
-    print ( "IoT Hub client started" )
     sensor = sensors()
+
+    # initialise thread instances
     t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure)
     t_set_sensor_val = threading.Thread(target=set_sensor_values)
     t_print_sensor_val = threading.Thread(target=print_sensor_values)
     t_write_lcd = threading.Thread(target=write_lcd)
     t_iothub_client = threading.Thread(target=iothub_client_telemetry_run)
     
+    # start threads
     t_set_msl_pressure.start()
     t_set_sensor_val.start()
+    print ( "Brew IoT Controller Started." )
+    lcd.message = "Brew IoT Control\nStarted!"
+    time.sleep(2)
     t_print_sensor_val.start()
     t_write_lcd.start()
-    #t_iothub_client.start()
+    t_iothub_client.start()
