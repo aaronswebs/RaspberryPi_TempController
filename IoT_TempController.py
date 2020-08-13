@@ -49,6 +49,8 @@ class sensors():
     self.altitude = 0.0
 
   def get_values(self):
+    if DEBUG:
+      print("Entering get_values, %s" % datetime.datetime.now().time())
     self.LoTempDS18B20 = LoTempDS18B20.get_temperature()
     self.HiTempDS18B20 = HiTempDS18B20.get_temperature()
     self.ambientTemp = bme280.temperature
@@ -56,7 +58,8 @@ class sensors():
     self.humidity = bme280.humidity
     self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
     self.altitude = bme280.altitude
-    print("\nTime: %s\nget_values" % datetime.datetime.now().time())
+    if DEBUG:
+      print("Exiting get_values, %s" % datetime.datetime.now().time())
 
 
 def set_mean_sea_level_pressure():
