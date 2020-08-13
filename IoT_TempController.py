@@ -145,6 +145,7 @@ def scroll_lcd_text(lengthOfMessage, displayTime):
     time.sleep(speed)
 
 def write_lcd_message(line1, line2, msgDisplayTime):
+  lcd.clear()
   lcd.cursor_position(0,0)
   lcd.message = line1
   lcd.cursor_position(0,1)
