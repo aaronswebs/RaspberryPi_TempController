@@ -112,9 +112,9 @@ def iothub_client_telemetry_run():
           else:
             message.custom_properties["temperatureAlert"] = "false"
           # Send the message.
-          print ( "Sending message: {}".format(message) )
+          print ( "Sending IoT message: {}".format(message) )
           client.send_message(message)
-          print ( "Message successfully sent" )
+          print ( "Message successfully sent to IoT Hub" )
           time.sleep(300)
   except KeyboardInterrupt:
       print ("\nStopped IoT Messages and Device")
@@ -182,7 +182,7 @@ def write_lcd():
   # put values on LCD
   if DEBUG:
     print("Entering write_lcd, %s" % datetime.datetime.now().time())
-  msgDisplayTime = 2
+  msgDisplayTime = 3
   while True:
     set_lcd_color(sensor.ambientTemp)
     line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
