@@ -140,7 +140,7 @@ def scroll_lcd_text(lengthOfMessage, displayTime):
     speed = ((lengthOfMessage-16)/(displayTime/2))
   else:
     speed = displayTime/2
-  print("Speed of message is: %0.2f" % speed)
+  print("\nLength of message is: %i\nSpeed of message is: %0.2f" % (lengthOfMessage, speed))
   for i in range(lengthOfMessage-16):
     lcd.move_left()
     time.sleep(speed)
