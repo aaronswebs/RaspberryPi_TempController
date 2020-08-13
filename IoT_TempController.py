@@ -119,6 +119,10 @@ def iothub_client_telemetry_run():
   except KeyboardInterrupt:
       print ("\nStopped IoT Messages and Device")
 
+def set_sensor_values():
+  while True:
+    sensor.get_values()
+
 def print_sensor_values():
   while True:
     #lcd is getting sensor values every two seconds.
@@ -180,18 +184,15 @@ def write_lcd():
     print("Entering write_lcd, %s" % datetime.datetime.now().time())
   msgDisplayTime = 2
   while True:
-    sensor.get_values()
     set_lcd_color(sensor.ambientTemp)
     line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
     line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
     write_lcd_message(line1, line2, msgDisplayTime)
     
-    #sensor.get_values()
     line1 = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
     line2 = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
     write_lcd_message(line1, line2, msgDisplayTime)
     
-    #sensor.get_values()
     line1 = "Humidity: %0.1f%%" % (sensor.humidity)
     line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
     write_lcd_message(line1, line2, msgDisplayTime)
@@ -202,15 +203,13 @@ if __name__ == '__main__':
     print ( "IoT Hub client started" )
     sensor = sensors()
     t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure)
-    #t_get_sensor_val = threading.Thread(target=sensor.get_values)
-    #t_set_lcd_color = threading.Thread(target=set_lcd_color, args=(sensor.ambientTemp))
+    t_set_sensor_val = threading.Thread(target=set_sensor_values)
     t_print_sensor_val = threading.Thread(target=print_sensor_values)
     t_write_lcd = threading.Thread(target=write_lcd)
     t_iothub_client = threading.Thread(target=iothub_client_telemetry_run)
     
     t_set_msl_pressure.start()
-    #t_get_sensor_val.start()
-    #t_set_lcd_color.start()
+    t_set_sensor_val.start()
     t_print_sensor_val.start()
     t_write_lcd.start()
     #t_iothub_client.start()
