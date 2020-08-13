@@ -1,4 +1,3 @@
-import glob
 import time
 from w1thermsensor import W1ThermSensor
 
