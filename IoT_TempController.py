@@ -94,7 +94,7 @@ def iothub_client_init():
     
 def iothub_client_telemetry_run():
   # Define the JSON message to send to IoT Hub.
-  MSG_TXT = "{{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor1_temp\": %.2f,\"sensor2_temp\": %.2f,\"dewpoint\": %.2f,\"altitude\": %.2f}}"
+  MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor1_temp\": %.2f,\"sensor2_temp\": %.2f,\"dewpoint\": %.2f,,\"altitude\": %.2f,,\"datetime\": \"%s\"}"
   
   client = iothub_client_init()
   print ( "IoT Hub device sending periodic messages, press Ctrl-C to exit" )
@@ -102,7 +102,7 @@ def iothub_client_telemetry_run():
       while True:
           sensor.get_values()
           # Build the message with telemetry values.
-          msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.LoTempDS18B20, sensor.HiTempDS18B20, sensor.dewpoint, sensor.altitude)
+          msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.LoTempDS18B20, sensor.HiTempDS18B20, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
           message = Message(msg_txt_formatted)
 
           # Add a custom application property to the message.
