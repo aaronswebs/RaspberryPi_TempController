@@ -185,12 +185,12 @@ def write_lcd():
     line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
     write_lcd_message(line1, line2, msgDisplayTime)
     
-    sensor.get_values()
+    #sensor.get_values()
     line1 = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
     line2 = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
     write_lcd_message(line1, line2, msgDisplayTime)
     
-    sensor.get_values()
+    #sensor.get_values()
     line1 = "Humidity: %0.1f%%" % (sensor.humidity)
     line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
     write_lcd_message(line1, line2, msgDisplayTime)
