@@ -149,15 +149,15 @@ def scroll_lcd_text(lengthOfMessage, displayTime):
   if DEBUG:
     print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
   if lengthOfMessage > 16:
-    speed = (displayTime/((lengthOfMessage-18)*2))
+    speed = (displayTime/((lengthOfMessage-14)*2))
   else:
     speed = 0
     time.sleep(displayTime)
-  for i in range(lengthOfMessage-18):
+  for i in range(lengthOfMessage-14):
     lcd.move_left()
     time.sleep(speed)
   time.sleep(1)
-  for i in range(lengthOfMessage-18):
+  for i in range(lengthOfMessage-14):
     lcd.move_right()
     time.sleep(speed)
   time.sleep(1)
