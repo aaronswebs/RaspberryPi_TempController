@@ -98,26 +98,23 @@ def iothub_client_telemetry_run():
   
   client = iothub_client_init()
   print ( "IoT Hub device sending periodic messages, press Ctrl-C to exit" )
-  try:
-      while True:
-          sensor.get_values()
-          # Build the message with telemetry values.
-          msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.LoTempDS18B20, sensor.HiTempDS18B20, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
-          message = Message(msg_txt_formatted)
+  while True:
+    sensor.get_values()
+    # Build the message with telemetry values.
+    msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.LoTempDS18B20, sensor.HiTempDS18B20, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
+    message = Message(msg_txt_formatted)
 
-          # Add a custom application property to the message.
-          # An IoT hub can filter on these properties without access to the message body.
-          if sensor.ambientTemp < 17:
-            message.custom_properties["temperatureAlert"] = "true"
-          else:
-            message.custom_properties["temperatureAlert"] = "false"
-          # Send the message.
-          print ( "Sending IoT message: {}".format(message) )
-          client.send_message(message)
-          print ( "Message successfully sent to IoT Hub" )
-          time.sleep(300)
-  except KeyboardInterrupt:
-      print ("\nStopped IoT Messages and Device")
+    # Add a custom application property to the message.
+    # An IoT hub can filter on these properties without access to the message body.
+    if sensor.ambientTemp < 17:
+      message.custom_properties["temperatureAlert"] = "true"
+    else:
+      message.custom_properties["temperatureAlert"] = "false"
+    # Send the message.
+    print ( "Sending IoT message: {}".format(message) )
+    client.send_message(message)
+    print ( "Message successfully sent to IoT Hub" )
+    time.sleep(300)
 
 def set_sensor_values():
   while True:
