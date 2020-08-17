@@ -146,41 +146,43 @@ def set_lcd_color(temperature):
     lcd.color = [100,0,0]
 
 def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
-  #while not thread_event.isSet():
-    if DEBUG:
-      print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
-    if lengthOfMessage > 16:
-      speed = (displayTime/((lengthOfMessage-14)*2))
-    else:
-      speed = 0
-      thread_event.wait(displayTime)
-    for i in range(lengthOfMessage-14):
-      lcd.move_left()
-      thread_event.wait(speed)
-    thread_event.wait(1)
-    for i in range(lengthOfMessage-14):
-      lcd.move_right()
-      thread_event.wait(speed)
-    thread_event.wait(1)
-    if DEBUG:
-      print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
+  if thread_event.isSet():
+    return
+  if DEBUG:
+    print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
+  if lengthOfMessage > 16:
+    speed = (displayTime/((lengthOfMessage-14)*2))
+  else:
+    speed = 0
+    thread_event.wait(displayTime)
+  for i in range(lengthOfMessage-14):
+    lcd.move_left()
+    thread_event.wait(speed)
+  thread_event.wait(1)
+  for i in range(lengthOfMessage-14):
+    lcd.move_right()
+    thread_event.wait(speed)
+  thread_event.wait(1)
+  if DEBUG:
+    print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
 
 def write_lcd_message(line1, line2, msgDisplayTime, thread_event):
-  #while not thread_event.isSet():
-    if DEBUG:
-      print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
-    lcd.clear()
-    lcd.cursor_position(0,0)
-    lcd.message = line1
-    lcd.cursor_position(0,1)
-    lcd.message = line2
-    if len(line1) > len(line2):
-      msgLength = len(line1)
-    else:
-      msgLength = len(line2)
-    scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
-    if DEBUG:
-      print("Exiting write_lcd_message, %s" % datetime.datetime.now().time())
+  if thread_event.isSet():
+    return
+  if DEBUG:
+    print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
+  lcd.clear()
+  lcd.cursor_position(0,0)
+  lcd.message = line1
+  lcd.cursor_position(0,1)
+  lcd.message = line2
+  if len(line1) > len(line2):
+    msgLength = len(line1)
+  else:
+    msgLength = len(line2)
+  scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
+  if DEBUG:
+    print("Exiting write_lcd_message, %s" % datetime.datetime.now().time())
   
 def write_lcd(thread_event):
     # put values on LCD
@@ -192,11 +194,13 @@ def write_lcd(thread_event):
       line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
       line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
       write_lcd_message(line1, line2, msgDisplayTime, thread_event)
-      
+      if thread_event.isSet():
+        return
       line1 = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
       line2 = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
       write_lcd_message(line1, line2, msgDisplayTime, thread_event)
-      
+      if thread_event.isSet():
+        return
       line1 = "Humidity: %0.1f%%" % (sensor.humidity)
       line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
       write_lcd_message(line1, line2, msgDisplayTime, thread_event)
