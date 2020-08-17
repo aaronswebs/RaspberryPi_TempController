@@ -64,7 +64,7 @@ class sensors():
       print("Exiting get_values, %s" % datetime.datetime.now().time())
 
 
-def set_mean_sea_level_pressure(thread_event):
+def set_mean_sea_level_pressure(update_interval, thread_event):
   while not thread_event.isSet():
     # Make a GET request to fetch the raw HTML content
     url = "http://www.bom.gov.au/vic/observations/vicall.shtml?ref=hdr"
@@ -85,6 +85,7 @@ def set_mean_sea_level_pressure(thread_event):
     tableCell = soup.find("td", attrs={"headers":"tCEN-press tCEN-station-melbourne-olympic-park"})
     meanSeaLevelPressure = float(tableCell.string)
     bme280.sea_level_pressure = meanSeaLevelPressure
+    thead_event.wait(update_interval)
 
 def iothub_client_init():
   # The device connection string to authenticate the device with your IoT hub.
@@ -207,7 +208,7 @@ if __name__ == '__main__':
     thread_event = threading.Event()
 
     # initialise thread instances
-    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(thread_event,))
+    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(600, thread_event))
     t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(4, thread_event))
     t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
     t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
