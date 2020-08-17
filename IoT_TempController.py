@@ -166,7 +166,7 @@ def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
 
 def write_lcd_message(line1, line2, msgDisplayTime, thread_event):
   while not thread_event.isSet():
-   if DEBUG:
+    if DEBUG:
       print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
     lcd.clear()
     lcd.cursor_position(0,0)
@@ -223,11 +223,11 @@ if __name__ == '__main__':
     t_write_lcd.start()
     t_iothub_client.start()
     
-    while not event.isSet():
+    while not thread_event.isSet():
       try:
         print("Checking in from main thread")
-        event.wait(2)
+        thread_event.wait(2)
       except KeyboardInterrupt:
-        event.set()
+        thread_event.set()
         print("Got a keyboard interupt and terminating")
         break
