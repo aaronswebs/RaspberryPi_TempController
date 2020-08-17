@@ -85,7 +85,7 @@ def set_mean_sea_level_pressure(update_interval, thread_event):
     tableCell = soup.find("td", attrs={"headers":"tCEN-press tCEN-station-melbourne-olympic-park"})
     meanSeaLevelPressure = float(tableCell.string)
     bme280.sea_level_pressure = meanSeaLevelPressure
-    thead_event.wait(update_interval)
+    thread_event.wait(update_interval)
 
 def iothub_client_init():
   # The device connection string to authenticate the device with your IoT hub.
