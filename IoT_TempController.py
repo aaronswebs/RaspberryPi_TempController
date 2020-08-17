@@ -15,7 +15,7 @@ import threading
 # The sample connects to a device-specific MQTT endpoint on your IoT Hub.
 from azure.iot.device import IoTHubDeviceClient, Message
 
-DEBUG = False
+DEBUG = True
 
 # Modify this if you have a different sized Character LCD
 lcd_columns = 16
@@ -146,7 +146,7 @@ def set_lcd_color(temperature):
     lcd.color = [100,0,0]
 
 def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
-  while not thread_event.isSet():
+  #while not thread_event.isSet():
     if DEBUG:
       print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
     if lengthOfMessage > 16:
