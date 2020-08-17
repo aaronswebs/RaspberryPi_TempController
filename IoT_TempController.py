@@ -166,7 +166,7 @@ def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
       print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
 
 def write_lcd_message(line1, line2, msgDisplayTime, thread_event):
-  while not thread_event.isSet():
+  #while not thread_event.isSet():
     if DEBUG:
       print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
     lcd.clear()
