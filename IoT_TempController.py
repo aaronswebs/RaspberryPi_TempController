@@ -40,6 +40,8 @@ lcd_degrees = chr(223)
 
 class sensors():
   def __init__(self):
+    if DEBUG:
+      print("Initialising sensors, %s" % datetime.datetime.now().time())
     self.LoTempDS18B20 = 0.0
     self.HiTempDS18B20 = 0.0
     self.ambientTemp = 0.0
@@ -62,26 +64,27 @@ class sensors():
       print("Exiting get_values, %s" % datetime.datetime.now().time())
 
 
-def set_mean_sea_level_pressure():
-  # Make a GET request to fetch the raw HTML content
-  url = "http://www.bom.gov.au/vic/observations/vicall.shtml?ref=hdr"
-  try:
-    response = requests.get(url)
-    html_content = response.text
+def set_mean_sea_level_pressure(thread_event):
+  while not thread_event.isSet():
+    # Make a GET request to fetch the raw HTML content
+    url = "http://www.bom.gov.au/vic/observations/vicall.shtml?ref=hdr"
+    try:
+      response = requests.get(url)
+      html_content = response.text
 
-    if response.status_code == 200:
-        print('Success - retrieved BOM observations') 
-    else:
-        print('Failed to get %s or content' % url)
-        raise Exception('Did not get valid response from server for %s' % url)
-  except:
-    print('Failed to retrieve HTML weather data')
+      if response.status_code == 200:
+          print('Success - retrieved BOM observations') 
+      else:
+          print('Failed to get %s or content' % url)
+          raise Exception('Did not get valid response from server for %s' % url)
+    except:
+      print('Failed to retrieve HTML weather data')
 
-  # Parse the html content
-  soup = BeautifulSoup(html_content, "lxml")
-  tableCell = soup.find("td", attrs={"headers":"tCEN-press tCEN-station-melbourne-olympic-park"})
-  meanSeaLevelPressure = float(tableCell.string)
-  bme280.sea_level_pressure = meanSeaLevelPressure
+    # Parse the html content
+    soup = BeautifulSoup(html_content, "lxml")
+    tableCell = soup.find("td", attrs={"headers":"tCEN-press tCEN-station-melbourne-olympic-park"})
+    meanSeaLevelPressure = float(tableCell.string)
+    bme280.sea_level_pressure = meanSeaLevelPressure
 
 def iothub_client_init():
   # The device connection string to authenticate the device with your IoT hub.
@@ -92,14 +95,13 @@ def iothub_client_init():
   client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
   return client
     
-def iothub_client_telemetry_run():
+def iothub_client_telemetry_run(thread_event):
   # Define the JSON message to send to IoT Hub.
   MSG_TXT = "{\"temperature\": %.2f,\"pressure\": %.2f,\"humidity\": %.2f,\"sensor1_temp\": %.2f,\"sensor2_temp\": %.2f,\"dewpoint\": %.2f,\"altitude\": %.2f,\"clientdatetime\": \"%s\"}"
   
   client = iothub_client_init()
   print ( "IoT Hub device sending periodic messages, press Ctrl-C to exit" )
-  while True:
-    sensor.get_values()
+  while not thread_event.isSet():
     # Build the message with telemetry values.
     msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.LoTempDS18B20, sensor.HiTempDS18B20, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
     message = Message(msg_txt_formatted)
@@ -114,16 +116,16 @@ def iothub_client_telemetry_run():
     print ( "Sending IoT message: {}".format(message) )
     client.send_message(message)
     print ( "Message successfully sent to IoT Hub" )
-    time.sleep(300)
+    thread_event.wait(300)
 
-def set_sensor_values():
-  while True:
+def set_sensor_values(update_interval, thread_event):
+  while not thread_event.isSet():
     sensor.get_values()
+    thread_event.wait(update_interval)
 
-def print_sensor_values():
-  while True:
-    #lcd is getting sensor values every two seconds.
-    #sensor.get_values() 
+def print_sensor_values(thread_event):
+  while not thread_event.isSet():
+    # main thread gets frequent upates of sensors
     print ("\nTime: %s" % datetime.datetime.now()) 
     print ("Temperature: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
     print ("LoTemp:      %0.1f%sC" % (sensor.LoTempDS18B20, degrees_symbol))
@@ -132,7 +134,7 @@ def print_sensor_values():
     print ("Pressure:    %0.1f hPa" % sensor.pressure)
     print ("Altitude:    %0.2f meters" % sensor.altitude)
     print ("Dewpoint:    %0.1f%sC" % (sensor.dewpoint, degrees_symbol))
-    time.sleep(5)
+    thread_event.wait(5)
             
 def set_lcd_color(temperature):
   if temperature < 18:
@@ -142,78 +144,90 @@ def set_lcd_color(temperature):
   else:
     lcd.color = [100,0,0]
 
-def scroll_lcd_text(lengthOfMessage, displayTime):
-  if DEBUG:
-    print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
-  if lengthOfMessage > 16:
-    speed = (displayTime/((lengthOfMessage-14)*2))
-  else:
-    speed = 0
-    time.sleep(displayTime)
-  for i in range(lengthOfMessage-14):
-    lcd.move_left()
-    time.sleep(speed)
-  time.sleep(1)
-  for i in range(lengthOfMessage-14):
-    lcd.move_right()
-    time.sleep(speed)
-  time.sleep(1)
-  if DEBUG:
-    print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
-
-def write_lcd_message(line1, line2, msgDisplayTime):
-  if DEBUG:
-    print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
-  lcd.clear()
-  lcd.cursor_position(0,0)
-  lcd.message = line1
-  lcd.cursor_position(0,1)
-  lcd.message = line2
-  if len(line1) > len(line2):
-    msgLength = len(line1)
-  else:
-    msgLength = len(line2)
-  scroll_lcd_text(msgLength,msgDisplayTime)
-  if DEBUG:
-    print("Exiting write_lcd_message, %s" % datetime.datetime.now().time())
-  
-def write_lcd():
-  # put values on LCD
-  if DEBUG:
-    print("Entering write_lcd, %s" % datetime.datetime.now().time())
-  msgDisplayTime = 3
-  while True:
-    set_lcd_color(sensor.ambientTemp)
-    line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
-    line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
-    write_lcd_message(line1, line2, msgDisplayTime)
-    
-    line1 = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
-    line2 = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
-    write_lcd_message(line1, line2, msgDisplayTime)
-    
-    line1 = "Humidity: %0.1f%%" % (sensor.humidity)
-    line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
-    write_lcd_message(line1, line2, msgDisplayTime)
+def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
+  while not thread_event.isSet():
     if DEBUG:
-      print("Exiting write_lcd, %s" % datetime.datetime.now().time())
+      print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
+    if lengthOfMessage > 16:
+      speed = (displayTime/((lengthOfMessage-14)*2))
+    else:
+      speed = 0
+      thread_event.wait(displayTime)
+    for i in range(lengthOfMessage-14):
+      lcd.move_left()
+      thread_event.wait(speed)
+    thread_event.wait(1)
+    for i in range(lengthOfMessage-14):
+      lcd.move_right()
+      thread_event.wait(speed)
+    thread_event.wait(1)
+    if DEBUG:
+      print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
+
+def write_lcd_message(line1, line2, msgDisplayTime, thread_event):
+  while not thread_event.isSet():
+   if DEBUG:
+      print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
+    lcd.clear()
+    lcd.cursor_position(0,0)
+    lcd.message = line1
+    lcd.cursor_position(0,1)
+    lcd.message = line2
+    if len(line1) > len(line2):
+      msgLength = len(line1)
+    else:
+      msgLength = len(line2)
+    scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
+    if DEBUG:
+      print("Exiting write_lcd_message, %s" % datetime.datetime.now().time())
+  
+def write_lcd(thread_event):
+    # put values on LCD
+    if DEBUG:
+      print("Entering write_lcd, %s" % datetime.datetime.now().time())
+    msgDisplayTime = 3
+    while not thread_event.isSet():
+      set_lcd_color(sensor.ambientTemp)
+      line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
+      line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
+      write_lcd_message(line1, line2, msgDisplayTime, thread_event)
+      
+      line1 = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
+      line2 = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
+      write_lcd_message(line1, line2, msgDisplayTime, thread_event)
+      
+      line1 = "Humidity: %0.1f%%" % (sensor.humidity)
+      line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
+      write_lcd_message(line1, line2, msgDisplayTime, thread_event)
+      if DEBUG:
+        print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
 if __name__ == '__main__':
     sensor = sensors()
+    thread_event = threading.Event()
 
     # initialise thread instances
-    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure)
-    t_set_sensor_val = threading.Thread(target=set_sensor_values)
-    t_print_sensor_val = threading.Thread(target=print_sensor_values)
-    t_write_lcd = threading.Thread(target=write_lcd)
-    t_iothub_client = threading.Thread(target=iothub_client_telemetry_run)
+    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(thread_event,))
+    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(4, thread_event))
+    t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
+    t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
+    t_iothub_client = threading.Thread(target=iothub_client_telemetry_run, args=(thread_event,))
     
     # start threads
     t_set_msl_pressure.start()
     t_set_sensor_val.start()
     print ( "Brew IoT Controller Started." )
     lcd.message = "Brew IoT Control\nStarted!"
-    time.sleep(2)
+    thread_event.wait(2)
     t_print_sensor_val.start()
     t_write_lcd.start()
     t_iothub_client.start()
+    
+    while not event.isSet():
+      try:
+        print("Checking in from main thread")
+        event.wait(2)
+      except KeyboardInterrupt:
+        event.set()
+        print("Got a keyboard interupt and terminating")
+        break
