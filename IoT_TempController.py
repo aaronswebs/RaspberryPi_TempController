@@ -178,7 +178,11 @@ def write_lcd(thread_event):
     if DEBUG:
       print("Entering write_lcd, %s" % datetime.datetime.now().time())
     msgDisplayTime = 3
-    message_lines = [ \
+    
+    while not thread_event.isSet():
+      set_lcd_color(sensor.ambientTemp)
+      # set text for LCD lines
+      message_lines = [ \
       "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees), \
       "Pressure: %0.1f hPa" % (sensor.pressure), \
       "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees), \
@@ -186,8 +190,6 @@ def write_lcd(thread_event):
       "Humidity: %0.1f%%" % (sensor.humidity), \
       "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees) ]
 
-    while not thread_event.isSet():
-      set_lcd_color(sensor.ambientTemp)
       for i in range(0, len(message_lines), 2):
         if thread_event.isSet():
           break
@@ -223,6 +225,7 @@ if __name__ == '__main__':
     t_set_sensor_val.start()
     print ( "Brew IoT Controller Started." )
     lcd.message = "Brew IoT Control\nStarted!"
+    thread_event.wait(2)
     if DEBUG:
       t_print_sensor_val.start()
     t_write_lcd.start()
