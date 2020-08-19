@@ -233,7 +233,7 @@ if __name__ == '__main__':
     
     while not thread_event.isSet():
       try:
-        None
+        thread_event.wait(10)
       except KeyboardInterrupt:
         thread_event.set()
         print("Got a keyboard interupt and terminating, %s" % datetime.datetime.now().time())
