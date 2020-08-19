@@ -210,6 +210,7 @@ def start_menu():
     lcd.message = "I am in the menu\nPress Select to continue"
     while True:
       if lcd.select_button:
+        lcd.message = "Bye!"
         return None
 
 # ############
