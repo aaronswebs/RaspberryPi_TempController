@@ -233,9 +233,8 @@ if __name__ == '__main__':
     
     while not thread_event.isSet():
       try:
-        print("Checking in from main thread")
-        thread_event.wait(2)
+        None
       except KeyboardInterrupt:
         thread_event.set()
-        print("Got a keyboard interupt and terminating")
+        print("Got a keyboard interupt and terminating, %s" % datetime.datetime.now().time())
         break
