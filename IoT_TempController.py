@@ -146,74 +146,74 @@ def set_lcd_color(temperature):
     lcd.color = [100,0,0]
 
 def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
-  if thread_event.isSet():
-    return
   if DEBUG:
     print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
+  
+  #calculate how many chars over flow LCD columns (16) and add padding
+  lcd_column_overflow = lengthOfMessage-lcd_columns
+  lcd_column_padding = 2
+  scroll_iterations = lcd_column_overflow + lcd_column_padding
+  scroll_speed = 0
+
   if lengthOfMessage > 16:
-    speed = (displayTime/((lengthOfMessage-14)*2))
+    scroll_speed = (displayTime/((scroll_iterations)*2))
+    for i in range(scroll_iterations*2):
+      if thread_event.isSet():
+        break
+      if i < scroll_iterations:
+        lcd.move_left()
+      else:
+        lcd.move_right()
+      thread_event.wait(scroll_speed)
   else:
-    speed = 0
+    if thread_event.isSet():
+      return
     thread_event.wait(displayTime)
-  for i in range(lengthOfMessage-14):
-    lcd.move_left()
-    thread_event.wait(speed)
-  thread_event.wait(1)
-  for i in range(lengthOfMessage-14):
-    lcd.move_right()
-    thread_event.wait(speed)
-  thread_event.wait(1)
+
   if DEBUG:
     print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
 
-def write_lcd_message(line1, line2, msgDisplayTime, thread_event):
-  if thread_event.isSet():
-    return
-  if DEBUG:
-    print("Entering write_lcd_message, %s" % datetime.datetime.now().time())
-  lcd.clear()
-  lcd.cursor_position(0,0)
-  lcd.message = line1
-  lcd.cursor_position(0,1)
-  lcd.message = line2
-  if len(line1) > len(line2):
-    msgLength = len(line1)
-  else:
-    msgLength = len(line2)
-  scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
-  if DEBUG:
-    print("Exiting write_lcd_message, %s" % datetime.datetime.now().time())
-  
 def write_lcd(thread_event):
     # put values on LCD
     if DEBUG:
       print("Entering write_lcd, %s" % datetime.datetime.now().time())
     msgDisplayTime = 3
+    message_lines = [ \
+      "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees), \
+      "Pressure: %0.1f hPa" % (sensor.pressure), \
+      "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees), \
+      "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees), \
+      "Humidity: %0.1f%%" % (sensor.humidity), \
+      "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees) ]
+
     while not thread_event.isSet():
       set_lcd_color(sensor.ambientTemp)
-      line1 = "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees)
-      line2 = "Pressure: %0.1f hPa" % (sensor.pressure)
-      write_lcd_message(line1, line2, msgDisplayTime, thread_event)
-      if thread_event.isSet():
-        return
-      line1 = "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees)
-      line2 = "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees)
-      write_lcd_message(line1, line2, msgDisplayTime, thread_event)
-      if thread_event.isSet():
-        return
-      line1 = "Humidity: %0.1f%%" % (sensor.humidity)
-      line2 = "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees)
-      write_lcd_message(line1, line2, msgDisplayTime, thread_event)
+      for i in range(0, len(message_lines), 2):
+        if thread_event.isSet():
+          break
+        lcd.clear()
+        lcd.cursor_position(0,0)
+        lcd.message = message_lines[i]
+        msgLength = len(message_lines[i])
+        if not i+1 > len(message_lines):
+          lcd.cursor_position(0,1)
+          lcd.message = message_lines[i+1]
+          if len(message_lines[i]) < len(message_lines[i+1]):
+            msgLength = len(message_lines[i+1])
+        scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
       if DEBUG:
         print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
+# ############
+# main process
+# ############
 if __name__ == '__main__':
     sensor = sensors()
     thread_event = threading.Event()
 
     # initialise thread instances
-    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(600, thread_event))
-    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(4, thread_event))
+    t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(600, thread_event,))
+    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(4, thread_event,))
     t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
     t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
     t_iothub_client = threading.Thread(target=iothub_client_telemetry_run, args=(thread_event,))
@@ -223,8 +223,8 @@ if __name__ == '__main__':
     t_set_sensor_val.start()
     print ( "Brew IoT Controller Started." )
     lcd.message = "Brew IoT Control\nStarted!"
-    thread_event.wait(2)
-    t_print_sensor_val.start()
+    if DEBUG:
+      t_print_sensor_val.start()
     t_write_lcd.start()
     t_iothub_client.start()
     
