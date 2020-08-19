@@ -207,7 +207,9 @@ def write_lcd(thread_event):
         print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
 def start_menu():
-    lcd.clear
+    lcd.clear()
+    lcd.home()
+    
     lcd.message = "I am in the menu\nPress Select to continue"
     while True:
       if lcd.select_button:
