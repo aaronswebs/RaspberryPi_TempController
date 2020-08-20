@@ -14,7 +14,7 @@ Target state is to introduce some PID control as well, however the relay will ne
 
 #TODO Implement PID using simplepid (https://pypi.org/project/simple-pid/)
 
-#TODO Implement LCD menu interface
+#TODO Implement LCD menu interface 
 
 Application Architecture:
 

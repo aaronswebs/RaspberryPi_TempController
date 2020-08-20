@@ -209,10 +209,11 @@ def write_lcd(thread_event):
 def start_menu():
     lcd.clear()
     lcd.home()
-    
     lcd.message = "I am in the menu\nPress Select to continue"
+    
     while True:
       if lcd.select_button:
+        lcd.clear()
         lcd.message = "Bye!"
         return None
 
@@ -249,7 +250,7 @@ if __name__ == '__main__':
           start_menu()
           print("Set event and halting")
           break
-        thread_event.wait(3)
+        thread_event.wait(2)
       except KeyboardInterrupt:
         thread_event.set()
         print("Got a keyboard interupt and terminating, %s" % datetime.datetime.now().time())
