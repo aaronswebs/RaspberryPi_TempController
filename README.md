@@ -12,9 +12,9 @@ A five button keyboard has been added to give some menu capability and control t
 
 Target state is to introduce some PID control as well, however the relay will need to be swapped out for something like a MOSFET for current control rather on / off switching.
 
-#TODO Implement PID using simplepid
+#TODO Implement PID using simplepid (https://pypi.org/project/simple-pid/)
 
-#TODO Implement LCD menu interface
+#TODO Implement LCD menu interface 
 
 Application Architecture:
 
