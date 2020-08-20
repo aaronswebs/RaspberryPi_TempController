@@ -11,3 +11,11 @@ I have added a Sparkfun Beefcake relay to manage comfortably switching 10 amps o
 A five button keyboard has been added to give some menu capability and control temperature set points and scroll through various values.
 
 Target state is to introduce some PID control as well, however the relay will need to be swapped out for something like a MOSFET for current control rather on / off switching.
+
+#TODO Implement PID using simplepid
+
+#TODO Implement LCD menu interface
+
+Application Architecture:
+
+![](https://github.com/the-ranga/RaspberryPi_TempController/blob/master/menu-stub%20(main).gif)
