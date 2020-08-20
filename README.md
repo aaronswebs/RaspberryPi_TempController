@@ -18,4 +18,4 @@ Target state is to introduce some PID control as well, however the relay will ne
 
 Application Architecture:
 
-![](https://github.com/the-ranga/RaspberryPi_TempController/blob/master/menu-stub%20(main).gif)
+![](https://github.com/the-ranga/RaspberryPi_TempController/blob/master/Docs/menu-stub%20(main).gif)
