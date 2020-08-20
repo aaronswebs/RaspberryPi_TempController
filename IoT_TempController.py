@@ -250,7 +250,7 @@ if __name__ == '__main__':
           start_menu()
           print("Set event and halting")
           break
-        thread_event.wait(0.5)
+        thread_event.wait(2)
       except KeyboardInterrupt:
         thread_event.set()
         print("Got a keyboard interupt and terminating, %s" % datetime.datetime.now().time())
