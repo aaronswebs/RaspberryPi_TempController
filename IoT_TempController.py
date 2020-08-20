@@ -209,10 +209,11 @@ def write_lcd(thread_event):
 def start_menu():
     lcd.clear()
     lcd.home()
-
     lcd.message = "I am in the menu\nPress Select to continue"
+    
     while True:
       if lcd.select_button:
+        lcd.clear()
         lcd.message = "Bye!"
         return None
 
