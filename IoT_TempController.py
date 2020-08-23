@@ -253,19 +253,17 @@ def pid_control(thread_event):
       x += [current_time - start_time]
       y += [sensor.outside_container_temp]
       setpoint += [pid.setpoint]
-    # run thread every 0.25 seconds
-    thread_event.wait(0.25)
+    # run thread every 1 seconds
+    thread_event.wait(1)
 
   if DEBUG:
+    print("Exiting pid_control, %s" % datetime.datetime.now().time())
     plt.plot(x, y, label='measured')
     plt.plot(x, setpoint, label='target')
     plt.xlabel('time')
     plt.ylabel('temperature')
     plt.legend()
     plt.show()
-
-  if DEBUG:
-    print("Exiting pid_control, %s" % datetime.datetime.now().time())
 
 def start_menu():
     lcd.clear()
