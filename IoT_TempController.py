@@ -68,25 +68,32 @@ class sensors():
       start_time = time.time()
     self.outside_container_temp = outside_container_temp.get_temperature()
     if DEBUG:
+      time_split = time.time()
       outside_sensor_time = time.time() - start_time
     self.liquid_temp = liquid_temp.get_temperature()
     if DEBUG:
-      liquid_sensor_time = time.time() - outside_sensor_time
+      time_split = time.time()
+      liquid_sensor_time = time.time() - time_split
     self.ambientTemp = bme280.temperature
     if DEBUG:
-      ambient_sensor_time = time.time() - liquid_sensor_time
+      time_split = time.time()
+      ambient_sensor_time = time.time() - time_split
     self.pressure = bme280.pressure
     if DEBUG:
-      pressure_sensor_time = time.time() - ambient_sensor_time
+      time_split = time.time()
+      pressure_sensor_time = time.time() - time_split
     self.humidity = bme280.humidity
     if DEBUG:
-      humidity_sensor_time = time.time() - pressure_sensor_time
+      time_split = time.time()
+      humidity_sensor_time = time.time() - time_split
     self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
     if DEBUG:
-      dewpoint_calc_time = time.time() - humidity_sensor_time
+      time_split = time.time()
+      dewpoint_calc_time = time.time() - time_split
     self.altitude = bme280.altitude
     if DEBUG:
-      altitude_sensor_time = time.time() - dewpoint_calc_time
+      time_split = time.time()
+      altitude_sensor_time = time.time() - time_split
       runtime = time.time() - start_time
       print("Function run time:  {runtime}\n \
              Outside Sensor:     {outside}\n \
