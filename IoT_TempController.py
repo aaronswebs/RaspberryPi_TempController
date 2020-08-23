@@ -258,6 +258,9 @@ def pid_control(thread_event):
 
   if DEBUG:
     print("Exiting pid_control, %s" % datetime.datetime.now().time())
+    print(setpoint)
+    print(y)
+    print(x)
     plt.plot(x, y, label='measured')
     plt.plot(x, setpoint, label='target')
     plt.xlabel('time')
