@@ -231,8 +231,8 @@ def pid_control(thread_event):
   if DEBUG:
     print("Entering pid_control, %s" % datetime.datetime.now().time())
   
-  pid.output_limits = (0, 100) # output value will be between 0 and 100
-  pid.sample_time = 1  # update every 1 seconds
+  pid.output_limits = (0, 1) # output value will be between 0 and 1: off or on
+  pid.sample_time = 0.5  # update every 0.5 seconds
   pid.auto_mode = True
   # pid.setpoint = 10 # reset setpoint to value
 
