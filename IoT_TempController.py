@@ -19,8 +19,6 @@ import RPi.GPIO as GPIO
 from azure.iot.device import IoTHubDeviceClient, Message
 
 DEBUG = True
-if DEBUG:
-  import matplotlib.pyplot as plt
 
 # Modify this if you have a different sized Character LCD
 lcd_columns = 16
@@ -67,14 +65,38 @@ class sensors():
   def get_values(self):
     if DEBUG:
       print("Entering get_values, %s" % datetime.datetime.now().time())
+      start_time = time.time()
     self.outside_container_temp = outside_container_temp.get_temperature()
+    if DEBUG:
+      outside_sensor_time = time.time() - start_time
     self.liquid_temp = liquid_temp.get_temperature()
+    if DEBUG:
+      liquid_sensor_time = time.time() - outside_sensor_time
     self.ambientTemp = bme280.temperature
+    if DEBUG:
+      ambient_sensor_time = time.time() - liquid_sensor_time
     self.pressure = bme280.pressure
+    if DEBUG:
+      pressure_sensor_time = time.time() - ambient_sensor_time
     self.humidity = bme280.humidity
+    if DEBUG:
+      humidity_sensor_time = time.time() - pressure_sensor_time
     self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
+    if DEBUG:
+      dewpoint_calc_time = time.time() - humidity_sensor_time
     self.altitude = bme280.altitude
     if DEBUG:
+      altitude_sensor_time = time.time() - dewpoint_calc_time
+      runtime = time.time() - start_time
+      print("Function run time:  {runtime}\n \
+             Outside Sensor:     {outside}\n \
+             Liquid Sensor:      {liquid}\n \
+             Ambient Sensor:     {ambient}\n \
+             Pressure Sensor:    {pressure}\n \
+             Humidity Sensor:    {humidity}\n \
+             Dewpoint Calc:      {dewpoint}\n \
+             Altitude Sensor:    {altitude}\n".format(runtime=runtime, outside=outside_sensor_time, liquid=liquid_sensor_time, ambient=ambient_sensor_time, \
+               pressure=pressure_sensor_time, humidity=humidity_sensor_time, dewpoint=dewpoint_calc_time, altitude=altitude_sensor_time))
       print("Exiting get_values, %s" % datetime.datetime.now().time())
 
 def set_mean_sea_level_pressure(update_interval, thread_event):
@@ -261,12 +283,6 @@ def pid_control(thread_event):
     print(setpoint)
     print(y)
     print(x)
-    plt.plot(x, y, label='measured')
-    plt.plot(x, setpoint, label='target')
-    plt.xlabel('time')
-    plt.ylabel('temperature')
-    plt.legend()
-    plt.show()
 
 def start_menu():
     lcd.clear()
