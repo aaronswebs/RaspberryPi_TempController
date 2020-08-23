@@ -10,7 +10,7 @@ import sensorConstant
 from bs4 import BeautifulSoup
 import requests
 import threading
-from simple_pid import PID
+from simple_pid import PID # https://github.com/m-lundberg/simple-pid
 import RPi.GPIO as GPIO
 
 # Using the Python Device SDK for IoT Hub:
@@ -19,6 +19,8 @@ import RPi.GPIO as GPIO
 from azure.iot.device import IoTHubDeviceClient, Message
 
 DEBUG = True
+if DEBUG:
+  import matplotlib.pyplot as plt
 
 # Modify this if you have a different sized Character LCD
 lcd_columns = 16
@@ -231,6 +233,8 @@ def relay_on(control):
 def pid_control(thread_event):
   if DEBUG:
     print("Entering pid_control, %s" % datetime.datetime.now().time())
+    start_time = time.time()
+    setpoint, y, x = [], [], []
   
   pid.output_limits = (0, 1) # output value will be between 0 and 1: off or on.  If using MOSFET for current control, values could be 0 to 100
   pid.sample_time = 0.5  # update every 0.5 seconds
@@ -243,9 +247,22 @@ def pid_control(thread_event):
 
     # grab sensor value directly - ie: do not rely on the set_sensor_val function for updates.
     #relay_on(pid(outside_container_temp.get_temperature()))
-  
-    # get PID value every second
-    thread_event.wait(1)
+    
+    if DEBUG:
+      current_time = time.time()
+      x += [current_time - start_time]
+      y += [sensor.outside_container_temp]
+      setpoint += [pid.setpoint]
+    # run thread every 0.25 seconds
+    thread_event.wait(0.25)
+
+  if DEBUG:
+    plt.plot(x, y, label='measured')
+    plt.plot(x, setpoint, label='target')
+    plt.xlabel('time')
+    plt.ylabel('temperature')
+    plt.legend()
+    plt.show()
 
   if DEBUG:
     print("Exiting pid_control, %s" % datetime.datetime.now().time())
