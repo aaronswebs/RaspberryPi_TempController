@@ -139,9 +139,9 @@ def print_sensor_values(thread_event):
   while not thread_event.isSet():
     # main thread gets frequent upates of sensors
     print ("\nTime: %s" % datetime.datetime.now()) 
-    print ("Temperature: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
-    print ("LoTemp:      %0.1f%sC" % (sensor.outside_container_temp, degrees_symbol))
-    print ("HiTemp:      %0.1f%sC" % (sensor.liquid_temp, degrees_symbol))
+    print ("Ambient: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
+    print ("Container:      %0.1f%sC" % (sensor.outside_container_temp, degrees_symbol))
+    print ("Liquid:      %0.1f%sC" % (sensor.liquid_temp, degrees_symbol))
     print ("Humidity:    %0.1f%%" % sensor.humidity)
     print ("Pressure:    %0.1f hPa" % sensor.pressure)
     print ("Altitude:    %0.2f meters" % sensor.altitude)
