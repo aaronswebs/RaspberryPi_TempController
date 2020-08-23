@@ -47,7 +47,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(relay_pin, GPIO.OUT, initial=GPIO.LOW) 
 
 # PID defaults
-default_temp_setpoint = 18
+default_temp_setpoint = 25
 pid = PID(5, 0.1, 0.1, setpoint=default_temp_setpoint)
 
 class sensors():
