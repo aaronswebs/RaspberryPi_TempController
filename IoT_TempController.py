@@ -132,6 +132,7 @@ def iothub_client_telemetry_run(thread_event):
 
 def set_sensor_values(update_interval, thread_event):
   while not thread_event.isSet():
+    # appears to take 2 seconds to read values from sensors.
     sensor.get_values()
     thread_event.wait(update_interval)
 
@@ -139,8 +140,8 @@ def print_sensor_values(thread_event):
   while not thread_event.isSet():
     # main thread gets frequent upates of sensors
     print ("\nTime: %s" % datetime.datetime.now()) 
-    print ("Ambient: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
-    print ("Container:      %0.1f%sC" % (sensor.outside_container_temp, degrees_symbol))
+    print ("Ambient:     %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
+    print ("Container:   %0.1f%sC" % (sensor.outside_container_temp, degrees_symbol))
     print ("Liquid:      %0.1f%sC" % (sensor.liquid_temp, degrees_symbol))
     print ("Humidity:    %0.1f%%" % sensor.humidity)
     print ("Pressure:    %0.1f hPa" % sensor.pressure)
@@ -231,17 +232,17 @@ def pid_control(thread_event):
   if DEBUG:
     print("Entering pid_control, %s" % datetime.datetime.now().time())
   
-  pid.output_limits = (0, 1) # output value will be between 0 and 1: off or on
+  pid.output_limits = (0, 1) # output value will be between 0 and 1: off or on.  If using MOSFET for current control, values could be 0 to 100
   pid.sample_time = 0.5  # update every 0.5 seconds
   pid.auto_mode = True
   # pid.setpoint = 10 # reset setpoint to value
 
   while not thread_event.isSet():
     # initial thought of grabbing from class - may not be updated frequently enough.
-    # relay_on(pid(sensor.outside_container_temp))
+    relay_on(pid(sensor.outside_container_temp))
 
-    # grab sensor value directly - ie: do not rely on the class.
-    relay_on(pid(outside_container_temp.get_temperature()))
+    # grab sensor value directly - ie: do not rely on the set_sensor_val function for updates.
+    #relay_on(pid(outside_container_temp.get_temperature()))
   
     # get PID value every second
     thread_event.wait(1)
@@ -269,7 +270,7 @@ if __name__ == '__main__':
 
     # initialise thread instances
     t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(600, thread_event,))
-    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(4, thread_event,))
+    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(0.2, thread_event,))
     t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
     t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
     t_iothub_client = threading.Thread(target=iothub_client_telemetry_run, args=(thread_event,))
