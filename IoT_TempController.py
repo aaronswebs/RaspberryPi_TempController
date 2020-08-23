@@ -10,12 +10,17 @@ import sensorConstant
 from bs4 import BeautifulSoup
 import requests
 import threading
+from simple_pid import PID # https://github.com/m-lundberg/simple-pid
+import RPi.GPIO as GPIO
+
 # Using the Python Device SDK for IoT Hub:
 #   https://github.com/Azure/azure-iot-sdk-python
 # The sample connects to a device-specific MQTT endpoint on your IoT Hub.
 from azure.iot.device import IoTHubDeviceClient, Message
 
 DEBUG = True
+if DEBUG:
+  import matplotlib.pyplot as plt
 
 # Modify this if you have a different sized Character LCD
 lcd_columns = 16
@@ -31,19 +36,28 @@ lcd.clear()
 lcd.color = [100, 100, 100]
 
 # Initialise the temp sensors
-LoTempDS18B20 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, sensorConstant.normaltempSensor)
-HiTempDS18B20 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, sensorConstant.hightempSensor)
+outside_container_temp = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, sensorConstant.normaltempSensor)
+liquid_temp = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, sensorConstant.hightempSensor)
 
 # define degrees sign character
 degrees_symbol = u'\N{DEGREE SIGN}'
 lcd_degrees = chr(223)
 
+# initialise relay GPIO control pin
+relay_pin = 17
+GPIO.setmode(GPIO.BCM) 
+GPIO.setup(relay_pin, GPIO.OUT, initial=GPIO.LOW) 
+
+# PID defaults
+default_temp_setpoint = 25
+pid = PID(5, 0.1, 0.1, setpoint=default_temp_setpoint)
+
 class sensors():
   def __init__(self):
     if DEBUG:
       print("Initialising sensors, %s" % datetime.datetime.now().time())
-    self.LoTempDS18B20 = 0.0
-    self.HiTempDS18B20 = 0.0
+    self.outside_container_temp = 0.0
+    self.liquid_temp = 0.0
     self.ambientTemp = 0.0
     self.pressure = 0.0
     self.humidity = 0.0
@@ -53,8 +67,8 @@ class sensors():
   def get_values(self):
     if DEBUG:
       print("Entering get_values, %s" % datetime.datetime.now().time())
-    self.LoTempDS18B20 = LoTempDS18B20.get_temperature()
-    self.HiTempDS18B20 = HiTempDS18B20.get_temperature()
+    self.outside_container_temp = outside_container_temp.get_temperature()
+    self.liquid_temp = liquid_temp.get_temperature()
     self.ambientTemp = bme280.temperature
     self.pressure = bme280.pressure
     self.humidity = bme280.humidity
@@ -62,7 +76,6 @@ class sensors():
     self.altitude = bme280.altitude
     if DEBUG:
       print("Exiting get_values, %s" % datetime.datetime.now().time())
-
 
 def set_mean_sea_level_pressure(update_interval, thread_event):
   while not thread_event.isSet():
@@ -104,7 +117,7 @@ def iothub_client_telemetry_run(thread_event):
   print ( "IoT Hub device sending periodic messages, press Ctrl-C to exit" )
   while not thread_event.isSet():
     # Build the message with telemetry values.
-    msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.LoTempDS18B20, sensor.HiTempDS18B20, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
+    msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.outside_container_temp, sensor.liquid_temp, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
     message = Message(msg_txt_formatted)
 
     # Add a custom application property to the message.
@@ -121,6 +134,7 @@ def iothub_client_telemetry_run(thread_event):
 
 def set_sensor_values(update_interval, thread_event):
   while not thread_event.isSet():
+    # appears to take 2 seconds to read values from sensors.
     sensor.get_values()
     thread_event.wait(update_interval)
 
@@ -128,9 +142,9 @@ def print_sensor_values(thread_event):
   while not thread_event.isSet():
     # main thread gets frequent upates of sensors
     print ("\nTime: %s" % datetime.datetime.now()) 
-    print ("Temperature: %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
-    print ("LoTemp:      %0.1f%sC" % (sensor.LoTempDS18B20, degrees_symbol))
-    print ("HiTemp:      %0.1f%sC" % (sensor.HiTempDS18B20, degrees_symbol))
+    print ("Ambient:     %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
+    print ("Container:   %0.1f%sC" % (sensor.outside_container_temp, degrees_symbol))
+    print ("Liquid:      %0.1f%sC" % (sensor.liquid_temp, degrees_symbol))
     print ("Humidity:    %0.1f%%" % sensor.humidity)
     print ("Pressure:    %0.1f hPa" % sensor.pressure)
     print ("Altitude:    %0.2f meters" % sensor.altitude)
@@ -183,10 +197,10 @@ def write_lcd(thread_event):
       set_lcd_color(sensor.ambientTemp)
       # set text for LCD lines
       message_lines = [ \
-      "Temp: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees), \
+      "Ambient: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees), \
       "Pressure: %0.1f hPa" % (sensor.pressure), \
-      "LoTemp: %0.1f%sC" % (sensor.LoTempDS18B20, lcd_degrees), \
-      "HiTemp: %0.1f%sC" % (sensor.HiTempDS18B20, lcd_degrees), \
+      "Container: %0.1f%sC" % (sensor.outside_container_temp, lcd_degrees), \
+      "Liquid: %0.1f%sC" % (sensor.liquid_temp, lcd_degrees), \
       "Humidity: %0.1f%%" % (sensor.humidity), \
       "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees) ]
 
@@ -205,6 +219,51 @@ def write_lcd(thread_event):
         scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
       if DEBUG:
         print("Exiting write_lcd, %s" % datetime.datetime.now().time())
+
+def relay_on(control):
+  if DEBUG:
+    print("Entering pid_control, %s" % datetime.datetime.now().time())
+    print("Control value: {}".format(control))
+
+  if control:
+    GPIO.output(relay_pin, True)
+  else:
+    GPIO.output(relay_pin, False)
+
+def pid_control(thread_event):
+  if DEBUG:
+    print("Entering pid_control, %s" % datetime.datetime.now().time())
+    start_time = time.time()
+    setpoint, y, x = [], [], []
+  
+  pid.output_limits = (0, 1) # output value will be between 0 and 1: off or on.  If using MOSFET for current control, values could be 0 to 100
+  pid.sample_time = 0.5  # update every 0.5 seconds
+  pid.auto_mode = True
+  # pid.setpoint = 10 # reset setpoint to value
+
+  while not thread_event.isSet():
+    # initial thought of grabbing from class - may not be updated frequently enough.
+    relay_on(pid(sensor.outside_container_temp))
+
+    # grab sensor value directly - ie: do not rely on the set_sensor_val function for updates.
+    #relay_on(pid(outside_container_temp.get_temperature()))
+    
+    if DEBUG:
+      current_time = time.time()
+      x += [current_time - start_time]
+      y += [sensor.outside_container_temp]
+      setpoint += [pid.setpoint]
+    # run thread every 1 seconds
+    thread_event.wait(1)
+
+  if DEBUG:
+    print("Exiting pid_control, %s" % datetime.datetime.now().time())
+    plt.plot(x, y, label='measured')
+    plt.plot(x, setpoint, label='target')
+    plt.xlabel('time')
+    plt.ylabel('temperature')
+    plt.legend()
+    plt.show()
 
 def start_menu():
     lcd.clear()
@@ -226,10 +285,11 @@ if __name__ == '__main__':
 
     # initialise thread instances
     t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(600, thread_event,))
-    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(4, thread_event,))
+    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(0.2, thread_event,))
     t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
     t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
     t_iothub_client = threading.Thread(target=iothub_client_telemetry_run, args=(thread_event,))
+    t_pid_control = threading.Thread(target=pid_control, args=(thread_event,))
     
     # start threads
     t_set_msl_pressure.start()
@@ -241,6 +301,7 @@ if __name__ == '__main__':
       t_print_sensor_val.start()
     t_write_lcd.start()
     t_iothub_client.start()
+    t_pid_control.start()
     
     while not thread_event.isSet():
       try:
