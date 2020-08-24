@@ -61,6 +61,8 @@ class sensors():
     self.humidity = 0.0
     self.dewpoint = 0.0
     self.altitude = 0.0
+    # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
+    # there is about ~100ms of overhead on the w1-therm library function calls.
     liquid_temp.set_resolution(9)
     outside_container_temp.set_resolution(9)
 
@@ -166,9 +168,10 @@ def iothub_client_telemetry_run(thread_event):
 
 def set_sensor_values(update_interval, thread_event):
   while not thread_event.isSet():
-    # appears to take 2 seconds to read values from sensors.
+    entry_time = time.time()
     sensor.get_values()
-    thread_event.wait(update_interval)
+    exit_time = time.time()
+    thread_event.wait(update_interval-(exit_time - entry_time))
 
 def print_sensor_values(thread_event):
   while not thread_event.isSet():
@@ -275,10 +278,11 @@ def pid_control(thread_event):
 
   while not thread_event.isSet():
     # initial thought of grabbing from class - may not be updated frequently enough.
-    relay_on(pid(sensor.outside_container_temp))
+    # relay_on(pid(sensor.outside_container_temp))
 
     # grab sensor value directly - ie: do not rely on the set_sensor_val function for updates.
-    #relay_on(pid(outside_container_temp.get_temperature()))
+    # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
+    relay_on(pid(outside_container_temp.get_temperature()))
     
     if DEBUG:
       current_time = time.time()
@@ -314,7 +318,7 @@ if __name__ == '__main__':
 
     # initialise thread instances
     t_set_msl_pressure = threading.Thread(target=set_mean_sea_level_pressure, args=(600, thread_event,))
-    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(0.2, thread_event,))
+    t_set_sensor_val = threading.Thread(target=set_sensor_values, args=(2, thread_event,))
     t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
     t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
     t_iothub_client = threading.Thread(target=iothub_client_telemetry_run, args=(thread_event,))
