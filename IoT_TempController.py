@@ -66,14 +66,15 @@ class sensors():
     if DEBUG:
       print("Entering get_values, %s" % datetime.datetime.now().time())
       start_time = time.time()
-    self.outside_container_temp = outside_container_temp.get_temperature()
-    if DEBUG:
-      time_split = time.time()
-      outside_sensor_time = time.time() - start_time
+    
     self.liquid_temp = liquid_temp.get_temperature()
     if DEBUG:
       time_split = time.time()
       liquid_sensor_time = time.time() - time_split
+    self.outside_container_temp = outside_container_temp.get_temperature()
+    if DEBUG:
+      time_split = time.time()
+      outside_sensor_time = time.time() - start_time
     self.ambientTemp = bme280.temperature
     if DEBUG:
       time_split = time.time()
