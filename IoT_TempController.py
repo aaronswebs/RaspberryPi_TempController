@@ -54,6 +54,7 @@ class sensors():
   def __init__(self):
     if DEBUG:
       print("Initialising sensors, %s" % datetime.datetime.now().time())
+      time_split = time.time()
     self.outside_container_temp = 0.0
     self.liquid_temp = 0.0
     self.ambientTemp = 0.0
@@ -69,32 +70,32 @@ class sensors():
       time_split = time.time()
     self.liquid_temp = liquid_temp.get_temperature()
     if DEBUG:
-      time_split = time.time()
       liquid_sensor_time = time.time() - time_split
+      time_split = time.time()
     self.outside_container_temp = outside_container_temp.get_temperature()
     if DEBUG:
-      time_split = time.time()
       outside_sensor_time = time.time() - time_split
+      time_split = time.time()
     self.ambientTemp = bme280.temperature
     if DEBUG:
-      time_split = time.time()
       ambient_sensor_time = time.time() - time_split
+      time_split = time.time()
     self.pressure = bme280.pressure
     if DEBUG:
-      time_split = time.time()
       pressure_sensor_time = time.time() - time_split
+      time_split = time.time()
     self.humidity = bme280.humidity
     if DEBUG:
-      time_split = time.time()
       humidity_sensor_time = time.time() - time_split
+      time_split = time.time()
     self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
     if DEBUG:
-      time_split = time.time()
       dewpoint_calc_time = time.time() - time_split
+      time_split = time.time()
     self.altitude = bme280.altitude
     if DEBUG:
-      time_split = time.time()
       altitude_sensor_time = time.time() - time_split
+      time_split = time.time()
       runtime = time.time() - start_time
       print("Function run time:  {runtime:0.7f}\n \
              Outside Sensor:     {outside:0.7f}\n \
