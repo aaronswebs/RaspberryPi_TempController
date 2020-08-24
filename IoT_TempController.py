@@ -95,14 +95,14 @@ class sensors():
       time_split = time.time()
       altitude_sensor_time = time.time() - time_split
       runtime = time.time() - start_time
-      print("Function run time:  {runtime}\n \
-             Outside Sensor:     {outside}\n \
-             Liquid Sensor:      {liquid}\n \
-             Ambient Sensor:     {ambient}\n \
-             Pressure Sensor:    {pressure}\n \
-             Humidity Sensor:    {humidity}\n \
-             Dewpoint Calc:      {dewpoint}\n \
-             Altitude Sensor:    {altitude}\n".format(runtime=runtime, outside=outside_sensor_time, liquid=liquid_sensor_time, ambient=ambient_sensor_time, \
+      print("Function run time:  {runtime:0.7f}\n \
+             Outside Sensor:     {outside:0.7f}\n \
+             Liquid Sensor:      {liquid:0.7f}\n \
+             Ambient Sensor:     {ambient:0.7f}\n \
+             Pressure Sensor:    {pressure:0.7f}\n \
+             Humidity Sensor:    {humidity:0.7f}\n \
+             Dewpoint Calc:      {dewpoint:0.7f}\n \
+             Altitude Sensor:    {altitude:0.7f}\n".format(runtime=runtime, outside=outside_sensor_time, liquid=liquid_sensor_time, ambient=ambient_sensor_time, \
                pressure=pressure_sensor_time, humidity=humidity_sensor_time, dewpoint=dewpoint_calc_time, altitude=altitude_sensor_time))
       print("Exiting get_values, %s" % datetime.datetime.now().time())
 
