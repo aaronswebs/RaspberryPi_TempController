@@ -292,6 +292,7 @@ def relay_on(control):
 def pid_control(interval, thread_event):
   if (DEBUG > 0) and (DEBUG >= 5):
     print("Entering pid_control, %s" % datetime.datetime.now().time())
+  if (DEBUG > 0) and (DEBUG >= 3):
     start_time = time.time()
     setpoint, y, x = [], [], []
    
