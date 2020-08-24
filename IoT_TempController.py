@@ -52,7 +52,7 @@ pid = PID(5, 0.1, 0.1, setpoint=default_temp_setpoint)
 
 class sensors():
   def __init__(self):
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       print("Initialising sensors, %s" % datetime.datetime.now().time())
     self.outside_container_temp = 0.0
     self.liquid_temp = 0.0
@@ -67,36 +67,36 @@ class sensors():
     outside_container_temp.set_resolution(11)
 
   def get_values(self):
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Entering get_values, %s" % datetime.datetime.now().time())
       start_time = time.time()
       time_split = time.time()
     self.liquid_temp = liquid_temp.get_temperature()
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       liquid_sensor_time = time.time() - time_split
       time_split = time.time()
     self.outside_container_temp = outside_container_temp.get_temperature()
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       outside_sensor_time = time.time() - time_split
       time_split = time.time()
     self.ambientTemp = bme280.temperature
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       ambient_sensor_time = time.time() - time_split
       time_split = time.time()
     self.pressure = bme280.pressure
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       pressure_sensor_time = time.time() - time_split
       time_split = time.time()
     self.humidity = bme280.humidity
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       humidity_sensor_time = time.time() - time_split
       time_split = time.time()
     self.dewpoint = sensorConstant.calcDewPoint(bme280.temperature, bme280.humidity)
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       dewpoint_calc_time = time.time() - time_split
       time_split = time.time()
     self.altitude = bme280.altitude
-    if (DEBUG > 0) or (DEBUG <= 9):
+    if (DEBUG > 0) and (DEBUG >= 9):
       altitude_sensor_time = time.time() - time_split
       time_split = time.time()
       runtime = time.time() - start_time
@@ -109,12 +109,12 @@ class sensors():
         Dewpoint Calc:      {dewpoint:0.7f}\n\
         Altitude Sensor:    {altitude:0.7f}\n".format(runtime=runtime, outside=outside_sensor_time, liquid=liquid_sensor_time, ambient=ambient_sensor_time, \
       pressure=pressure_sensor_time, humidity=humidity_sensor_time, dewpoint=dewpoint_calc_time, altitude=altitude_sensor_time))
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Exiting get_values, %s" % datetime.datetime.now().time())
 
 def set_mean_sea_level_pressure(update_interval, thread_event):
   while not thread_event.isSet():
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Entering set_mean_sea_level_pressure loop, %s" % datetime.datetime.now().time())
     # Make a GET request to fetch the raw HTML content
     url = "http://www.bom.gov.au/vic/observations/vicall.shtml?ref=hdr"
@@ -135,10 +135,10 @@ def set_mean_sea_level_pressure(update_interval, thread_event):
     tableCell = soup.find("td", attrs={"headers":"tCEN-press tCEN-station-melbourne-olympic-park"})
     meanSeaLevelPressure = float(tableCell.string)
     bme280.sea_level_pressure = meanSeaLevelPressure
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
         print("Exiting set_mean_sea_level_pressure loop, %s" % datetime.datetime.now().time())
     thread_event.wait(update_interval)
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
         print("Exiting set_mean_sea_level_pressure function, %s" % datetime.datetime.now().time())
 
 def iothub_client_init():
@@ -157,7 +157,7 @@ def iothub_client_telemetry_run(thread_event):
   client = iothub_client_init()
   print ( "IoT Hub device sending periodic messages, press Ctrl-C to exit" )
   while not thread_event.isSet():
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Entering telemetry_run loop, %s" % datetime.datetime.now().time())
     # Build the message with telemetry values.
     msg_txt_formatted = MSG_TXT % (sensor.ambientTemp, sensor.pressure, sensor.humidity, sensor.outside_container_temp, sensor.liquid_temp, sensor.dewpoint, sensor.altitude,datetime.datetime.now())
@@ -173,20 +173,20 @@ def iothub_client_telemetry_run(thread_event):
     print ( "Sending IoT message: {}".format(message) )
     client.send_message(message)
     print ( "Message successfully sent to IoT Hub" )
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Exiting telemetry_run loop, %s" % datetime.datetime.now().time())
     thread_event.wait(300)
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Exiting telemetry_run function, %s" % datetime.datetime.now().time())
 
 def set_sensor_values(update_interval, thread_event):
   while not thread_event.isSet():
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
         print("Entering set_sensor_values loop, %s" % datetime.datetime.now().time())
     entry_time = time.time()
     sensor.get_values()
     exit_time = time.time()
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
         print("Exiting set_sensor_values loop, %s" % datetime.datetime.now().time())
     thread_event.wait(update_interval-(exit_time - entry_time))
 
@@ -214,7 +214,7 @@ def set_lcd_color(temperature):
     lcd.color = [100,0,0]
 
 def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
-  if (DEBUG > 0) or (DEBUG <= 5):
+  if (DEBUG > 0) and (DEBUG >= 5):
     print("Entering scroll_lcd_text, %s" % datetime.datetime.now().time())
   
   #calculate how many chars over flow LCD columns (16) and add padding
@@ -238,12 +238,12 @@ def scroll_lcd_text(lengthOfMessage, displayTime, thread_event):
       return
     thread_event.wait(displayTime)
 
-  if (DEBUG > 0) or (DEBUG <= 5):
+  if (DEBUG > 0) and (DEBUG >= 5):
     print("Exiting scroll_lcd_text, %s" % datetime.datetime.now().time())
 
 def write_lcd(thread_event):
     # put values on LCD
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Entering write_lcd, %s" % datetime.datetime.now().time())
     msgDisplayTime = 3
     
@@ -271,26 +271,26 @@ def write_lcd(thread_event):
           if len(message_lines[i]) < len(message_lines[i+1]):
             msgLength = len(message_lines[i+1])
         scroll_lcd_text(msgLength,msgDisplayTime, thread_event)
-      if (DEBUG > 0) or (DEBUG <= 5):
+      if (DEBUG > 0) and (DEBUG >= 5):
         print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
 def relay_on(control):
-  if (DEBUG > 0) or (DEBUG <= 5):
+  if (DEBUG > 0) and (DEBUG >= 5):
     print("Entering relay_on, %s" % datetime.datetime.now().time())
 
   if control:
-    if (DEBUG > 0) or (DEBUG <= 1):
+    if (DEBUG > 0) and (DEBUG >= 3):
       print("Relay On; Control value: {}".format(control))
     GPIO.output(relay_pin, True)
   else:
-    if (DEBUG > 0) or (DEBUG <= 1):
+    if (DEBUG > 0) and (DEBUG >= 3):
       print("Relay Off; Control value: {}".format(control))
     GPIO.output(relay_pin, False)
-  if (DEBUG > 0) or (DEBUG <= 5):
+  if (DEBUG > 0) and (DEBUG >= 5):
     print("Exiting relay_on, %s" % datetime.datetime.now().time())
 
 def pid_control(interval, thread_event):
-  if (DEBUG > 0) or (DEBUG <= 5):
+  if (DEBUG > 0) and (DEBUG >= 5):
     print("Entering pid_control, %s" % datetime.datetime.now().time())
     start_time = time.time()
     setpoint, y, x = [], [], []
@@ -302,7 +302,7 @@ def pid_control(interval, thread_event):
   # pid.setpoint = 10 # reset setpoint to value
 
   while not thread_event.isSet():
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Entering pid_control loop, %s" % datetime.datetime.now().time())
     entry_time = time.time()
     # initial thought of grabbing from class - may not be updated frequently enough.
@@ -312,7 +312,7 @@ def pid_control(interval, thread_event):
     # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
     relay_on(pid(outside_container_temp.get_temperature()))
     
-    if (DEBUG > 0) or (DEBUG <= 3):
+    if (DEBUG > 0) and (DEBUG >= 3):
       current_time = time.time()
       x += [current_time - start_time]
       y += [sensor.outside_container_temp]
@@ -320,15 +320,15 @@ def pid_control(interval, thread_event):
 
     exit_time = time.time()
     # run every interval.  Calc wait time based on processing time.
-    if (DEBUG > 0) or (DEBUG <= 5):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Exiting pid_control loop, %s" % datetime.datetime.now().time())
     thread_event.wait(interval-(exit_time - entry_time))  
 
-  if (DEBUG > 0) or (DEBUG <= 3):
+  if (DEBUG > 0) and (DEBUG >= 3):
     print(setpoint)
     print(y)
     print(x)
-  if (DEBUG > 0) or (DEBUG <= 5):
+  if (DEBUG > 0) and (DEBUG >= 5):
     print("Exiting pid_control, %s" % datetime.datetime.now().time())
 
 def start_menu():
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     print ( "Brew IoT Controller Started." )
     lcd.message = "Brew IoT Control\nStarted!"
     thread_event.wait(2)
-    if (DEBUG > 0) or (DEBUG <= 1):
+    if (DEBUG > 0) and (DEBUG >= 1):
       t_print_sensor_val.start()
     t_write_lcd.start()
     t_iothub_client.start()
