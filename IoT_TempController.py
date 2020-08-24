@@ -63,8 +63,8 @@ class sensors():
     self.altitude = 0.0
     # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
     # there is about ~100ms of overhead on the w1-therm library function calls.
-    liquid_temp.set_resolution(9)
-    outside_container_temp.set_resolution(9)
+    liquid_temp.set_resolution(10)
+    outside_container_temp.set_resolution(10)
 
   def get_values(self):
     if DEBUG:
