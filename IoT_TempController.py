@@ -63,8 +63,8 @@ class sensors():
     self.altitude = 0.0
     # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
     # there is about ~100ms of overhead on the w1-therm library function calls.
-    liquid_temp.set_resolution(10)
-    outside_container_temp.set_resolution(10)
+    liquid_temp.set_resolution(11)
+    outside_container_temp.set_resolution(11)
 
   def get_values(self):
     if DEBUG:
@@ -184,6 +184,8 @@ def print_sensor_values(thread_event):
     print ("Pressure:    %0.2f hPa" % sensor.pressure)
     print ("Altitude:    %0.2f meters" % sensor.altitude)
     print ("Dewpoint:    %0.2f%sC" % (sensor.dewpoint, degrees_symbol))
+    print ("PID Components")
+    print ("P=%0.3f I=%0.3f D=%0.3f" % (pid.components))
     thread_event.wait(5)
             
 def set_lcd_color(temperature):
@@ -272,7 +274,7 @@ def pid_control(thread_event):
     setpoint, y, x = [], [], []
   
   pid.output_limits = (0, 1) # output value will be between 0 and 1: off or on.  If using MOSFET for current control, values could be 0 to 100
-  pid.sample_time = 0.5  # update every 0.5 seconds
+  pid.sample_time = 0.5  # update PID model every 0.5 seconds
   pid.auto_mode = True
   # pid.setpoint = 10 # reset setpoint to value
 
