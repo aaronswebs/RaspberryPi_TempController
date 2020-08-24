@@ -177,13 +177,13 @@ def print_sensor_values(thread_event):
   while not thread_event.isSet():
     # main thread gets frequent upates of sensors
     print ("\nTime: %s" % datetime.datetime.now()) 
-    print ("Ambient:     %0.1f%sC" % (sensor.ambientTemp, degrees_symbol))
-    print ("Container:   %0.1f%sC" % (sensor.outside_container_temp, degrees_symbol))
-    print ("Liquid:      %0.1f%sC" % (sensor.liquid_temp, degrees_symbol))
-    print ("Humidity:    %0.1f%%" % sensor.humidity)
-    print ("Pressure:    %0.1f hPa" % sensor.pressure)
+    print ("Ambient:     %0.2f%sC" % (sensor.ambientTemp, degrees_symbol))
+    print ("Container:   %0.2f%sC" % (sensor.outside_container_temp, degrees_symbol))
+    print ("Liquid:      %0.2f%sC" % (sensor.liquid_temp, degrees_symbol))
+    print ("Humidity:    %0.2f%%" % sensor.humidity)
+    print ("Pressure:    %0.2f hPa" % sensor.pressure)
     print ("Altitude:    %0.2f meters" % sensor.altitude)
-    print ("Dewpoint:    %0.1f%sC" % (sensor.dewpoint, degrees_symbol))
+    print ("Dewpoint:    %0.2f%sC" % (sensor.dewpoint, degrees_symbol))
     thread_event.wait(5)
             
 def set_lcd_color(temperature):
@@ -232,12 +232,12 @@ def write_lcd(thread_event):
       set_lcd_color(sensor.ambientTemp)
       # set text for LCD lines
       message_lines = [ \
-      "Ambient: %0.1f%sC" % (sensor.ambientTemp, lcd_degrees), \
-      "Pressure: %0.1f hPa" % (sensor.pressure), \
-      "Container: %0.1f%sC" % (sensor.outside_container_temp, lcd_degrees), \
-      "Liquid: %0.1f%sC" % (sensor.liquid_temp, lcd_degrees), \
-      "Humidity: %0.1f%%" % (sensor.humidity), \
-      "Dew Point: %0.1f%sC" % (sensor.dewpoint, lcd_degrees) ]
+      "Ambient: %0.2f%sC" % (sensor.ambientTemp, lcd_degrees), \
+      "Pressure: %0.2f hPa" % (sensor.pressure), \
+      "Container: %0.2f%sC" % (sensor.outside_container_temp, lcd_degrees), \
+      "Liquid: %0.2f%sC" % (sensor.liquid_temp, lcd_degrees), \
+      "Humidity: %0.2f%%" % (sensor.humidity), \
+      "Dew Point: %0.2f%sC" % (sensor.dewpoint, lcd_degrees) ]
 
       for i in range(0, len(message_lines), 2):
         if thread_event.isSet():
@@ -290,7 +290,7 @@ def pid_control(thread_event):
       y += [sensor.outside_container_temp]
       setpoint += [pid.setpoint]
     # run thread every 1 seconds
-    thread_event.wait(1)
+    thread_event.wait(0.5)
 
   if DEBUG:
     print("Exiting pid_control, %s" % datetime.datetime.now().time())
