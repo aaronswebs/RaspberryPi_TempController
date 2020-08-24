@@ -54,7 +54,6 @@ class sensors():
   def __init__(self):
     if DEBUG:
       print("Initialising sensors, %s" % datetime.datetime.now().time())
-      time_split = time.time()
     self.outside_container_temp = 0.0
     self.liquid_temp = 0.0
     self.ambientTemp = 0.0
@@ -62,6 +61,8 @@ class sensors():
     self.humidity = 0.0
     self.dewpoint = 0.0
     self.altitude = 0.0
+    liquid_temp.set_resolution(9)
+    outside_container_temp.set_resolution(9)
 
   def get_values(self):
     if DEBUG:
