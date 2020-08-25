@@ -218,6 +218,7 @@ def heater_switch_control(thread_event):
     heat_element.state = "off"
     heat_element.on()
     thread_event.wait(heat_element.off_time)
+    thread_event.wait(0.2)
   
   heat_element.off()
     
