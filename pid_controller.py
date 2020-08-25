@@ -227,8 +227,9 @@ def pid_control(interval, thread_event):
     thread_event.wait(interval-(exit_time - entry_time))  
 
   if (DEBUG > 0) and (DEBUG >= 3):
+    print("setpoint,x,y,pidoutput,pidcomponents")
     for i in range(0, len(y)):
-        print("{},{},{},{},{}\n".format(setpoint[i],x[i],y[i],pidoutput[i],pidcomponents[i],))
+        print("{},{},{},{},{}".format(setpoint[i],x[i],y[i],pidoutput[i],pidcomponents[i],))
         #print(y)
         #print(x)
   if (DEBUG > 0) and (DEBUG >= 5):
