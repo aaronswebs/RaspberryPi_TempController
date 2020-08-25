@@ -265,7 +265,7 @@ def write_lcd(thread_event):
         lcd.cursor_position(0,0)
         lcd.message = message_lines[i]
         msgLength = len(message_lines[i])
-        if not i+1 > len(message_lines):
+        if not (i+1 >= len(message_lines)):
           lcd.cursor_position(0,1)
           lcd.message = message_lines[i+1]
           if len(message_lines[i]) < len(message_lines[i+1]):

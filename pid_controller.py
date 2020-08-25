@@ -151,6 +151,7 @@ def write_lcd(thread_event):
       # set text for LCD lines
       message_lines = [ \
       "Ambient: %0.2f%sC" % (sensor.ambientTemp, lcd_degrees), \
+      "", \
       "Container: %0.2f%sC" % (sensor.outside_container_temp, lcd_degrees), \
       "Liquid: %0.2f%sC" % (sensor.liquid_temp, lcd_degrees), \
       "PID Values", \
@@ -164,8 +165,6 @@ def write_lcd(thread_event):
         lcd.message = message_lines[i]
         msgLength = len(message_lines[i])
         if not (i+1 >= len(message_lines)):
-          if (DEBUG > 0) and (DEBUG >= 3):
-            print("i= {}, i+1= {} length= {}, calc= {}".format(i,i+1,len(message_lines),not (i+1 > len(message_lines))))
           lcd.cursor_position(0,1)
           lcd.message = message_lines[i+1]
           if len(message_lines[i]) < len(message_lines[i+1]):
@@ -228,8 +227,8 @@ def pid_control(interval, thread_event):
     thread_event.wait(interval-(exit_time - entry_time))  
 
   if (DEBUG > 0) and (DEBUG >= 3):
-    for points in len(y):
-        print("{},{},{},{},{}\n".format(setpoint[points],x[points],y[points],pidoutput[points],pidcomponents[points],))
+    for i in range(0, len(y)):
+        print("{},{},{},{},{}\n".format(setpoint[i],x[i],y[i],pidoutput[i],pidcomponents[i],))
         #print(y)
         #print(x)
   if (DEBUG > 0) and (DEBUG >= 5):
