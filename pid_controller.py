@@ -90,7 +90,7 @@ class heater():
     # set full cycle for 10 seconds
     self.cycle_time = 10
     
-  def on()
+  def on():
     self.on_time = self.duty_cycle * self.cycle_time
     self.off_time = self.cycle_time - self.on_time
     if self.on_time >= 1:
@@ -98,7 +98,7 @@ class heater():
         print("Relay On; duty_cycle: {}".format(self.duty_cycle))
       GPIO.output(relay_pin, True)
   
-  def off()
+  def off():
     self.duty_cycle = 0
     if (DEBUG > 0) and (DEBUG >= 3):
       print("Relay Off")
