@@ -82,6 +82,29 @@ class sensors():
     if (DEBUG > 0) and (DEBUG >= 5):
       print("Exiting get_values, %s" % datetime.datetime.now().time())
 
+class heater():
+  def __init__(self):
+    if (DEBUG > 0) and (DEBUG >= 9):
+      print("Initialising heater, %s" % datetime.datetime.now().time())
+    self.duty_cycle = 0.0
+    # set full cycle for 10 seconds
+    self.cycle_time = 10
+    
+  def on()
+    self.on_time = self.duty_cycle * self.cycle_time
+    self.off_time = self.cycle_time - self.on_time
+    if self.on_time >= 1:
+      if (DEBUG > 0) and (DEBUG >= 3):
+        print("Relay On; duty_cycle: {}".format(self.duty_cycle))
+      GPIO.output(relay_pin, True)
+  
+  def off()
+    self.duty_cycle = 0
+    if (DEBUG > 0) and (DEBUG >= 3):
+      print("Relay Off")
+    GPIO.output(relay_pin, False)
+    
+
 def set_sensor_values(update_interval, thread_event):
   while not thread_event.isSet():
     if (DEBUG > 0) and (DEBUG >= 5):
@@ -200,6 +223,7 @@ def pid_control(interval, thread_event):
   pid.sample_time = interval  # update PID model every interval seconds
   pid.auto_mode = True
   # pid.setpoint = 10 # reset setpoint to value
+  heat_element = heater()
 
   while not thread_event.isSet():
     if (DEBUG > 0) and (DEBUG >= 5):
@@ -211,7 +235,10 @@ def pid_control(interval, thread_event):
     # grab sensor value directly - ie: do not rely on the set_sensor_val function for updates.
     # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
     system_temp = outside_container_temp.get_temperature()
-    relay_on(pid(system_temp))
+    control_value = (pid(system_temp))
+    heat_element.duty_cycle = control_value
+
+    heater.on()
     
     if (DEBUG > 0) and (DEBUG >= 3):
       current_time = time.time()
@@ -219,14 +246,17 @@ def pid_control(interval, thread_event):
       y += [system_temp]
       setpoint += [pid.setpoint]
       pidcomponents += [pid.components]
-      pidoutput += [pid(outside_container_temp.get_temperature())]
+      pidoutput += [control_value]
 
     exit_time = time.time()
     # run every interval.  Calc wait time based on processing time.
     if (DEBUG > 0) and (DEBUG >= 5):
       print("Exiting pid_control loop, %s" % datetime.datetime.now().time())
     thread_event.wait(interval-(exit_time - entry_time))  
-
+  
+  # turn element off
+  heater.off()
+  
   if (DEBUG > 0) and (DEBUG >= 3):
     print("setpoint,x,y,pidoutput,Kp,Ki,Kd")
     for i in range(0, len(y)):
