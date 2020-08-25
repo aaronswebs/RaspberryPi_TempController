@@ -89,8 +89,10 @@ class heater():
     self.duty_cycle = 0.0
     # set full cycle for 10 seconds
     self.cycle_time = 10
+    self.on_time = 0.0
+    self.off_time = 0.0
     
-  def on():
+  def on(self):
     self.on_time = self.duty_cycle * self.cycle_time
     self.off_time = self.cycle_time - self.on_time
     if self.on_time >= 1:
@@ -98,7 +100,7 @@ class heater():
         print("Relay On; duty_cycle: {}".format(self.duty_cycle))
       GPIO.output(relay_pin, True)
   
-  def off():
+  def off(self):
     self.duty_cycle = 0
     if (DEBUG > 0) and (DEBUG >= 3):
       print("Relay Off")
@@ -237,8 +239,10 @@ def pid_control(interval, thread_event):
     system_temp = outside_container_temp.get_temperature()
     control_value = (pid(system_temp))
     heat_element.duty_cycle = control_value
-
-    heater.on()
+    if control_value > 0:
+      heat_element.on()
+    else:
+      heat_element.off()
     
     if (DEBUG > 0) and (DEBUG >= 3):
       current_time = time.time()
@@ -255,7 +259,7 @@ def pid_control(interval, thread_event):
     thread_event.wait(interval-(exit_time - entry_time))  
   
   # turn element off
-  heater.off()
+  heat_element.off()
   
   if (DEBUG > 0) and (DEBUG >= 3):
     print("setpoint,x,y,pidoutput,Kp,Ki,Kd")
