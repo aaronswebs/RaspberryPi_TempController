@@ -96,7 +96,7 @@ class heater():
   def set_cycle(self, control_value):
     if (DEBUG > 0) and (DEBUG >= 9):
       print("Setting heater duty cycle, %s" % datetime.datetime.now().time())
-    self.duty_cycle = control_value
+    self.duty_cycle = control_value / 100
     self.on_time = self.duty_cycle * self.cycle_time
     self.off_time = self.cycle_time - self.on_time
 
