@@ -91,18 +91,27 @@ class heater():
     self.cycle_time = 10
     self.on_time = 0.0
     self.off_time = 0.0
+    self.state = "off"
     
-  def on(self):
+  def set_cycle(self, control_value):
+    if (DEBUG > 0) and (DEBUG >= 9):
+      print("Setting heater duty cycle, %s" % datetime.datetime.now().time())
+    self.duty_cycle = control_value
     self.on_time = self.duty_cycle * self.cycle_time
     self.off_time = self.cycle_time - self.on_time
-    if self.on_time >= 1:
-      if (DEBUG > 0) and (DEBUG >= 3):
-        print("Relay On; duty_cycle: {}".format(self.duty_cycle))
+
+  def on(self):
+    if (self.on_time >= 1) and (self.state == "on"):
+      if (DEBUG > 0) and (DEBUG >= 5):
+        print("Relay On; duty_cycle: {}; on_time {} seconds".format(self.duty_cycle,self.on_time))
       GPIO.output(relay_pin, True)
+    else:
+      if (DEBUG > 0) and (DEBUG >= 5):
+        print("Relay Off; duty_cycle: {}; off_time {} seconds".format(self.duty_cycle,self.off_time))
+      GPIO.output(relay_pin, False)
   
   def off(self):
-    self.duty_cycle = 0
-    if (DEBUG > 0) and (DEBUG >= 3):
+    if (DEBUG > 0) and (DEBUG >= 5):
       print("Relay Off")
     GPIO.output(relay_pin, False)
     
@@ -198,35 +207,36 @@ def write_lcd(thread_event):
       if (DEBUG > 0) and (DEBUG >= 5):
         print("Exiting write_lcd, %s" % datetime.datetime.now().time())
 
-def relay_on(control):
+def heater_switch_control(thread_event):
   if (DEBUG > 0) and (DEBUG >= 5):
-    print("Entering relay_on, %s" % datetime.datetime.now().time())
-
-  if control:
-    if (DEBUG > 0) and (DEBUG >= 3):
-      print("Relay On; Control value: {}".format(control))
-    GPIO.output(relay_pin, True)
-  else:
-    if (DEBUG > 0) and (DEBUG >= 3):
-      print("Relay Off; Control value: {}".format(control))
-    GPIO.output(relay_pin, False)
+    print("Entering heater_switch_control, %s" % datetime.datetime.now().time())
+  
+  while not thread_event.isSet():
+    heat_element.state = "on"
+    heat_element.on()
+    thread_event.wait(heat_element.on_time)
+    heat_element.state = "off"
+    heat_element.on()
+    thread_event.wait(heat_element.off_time)
+  
+  heat_element.off()
+    
   if (DEBUG > 0) and (DEBUG >= 5):
-    print("Exiting relay_on, %s" % datetime.datetime.now().time())
+    print("Exiting heater_switch_control, %s" % datetime.datetime.now().time())
 
 def pid_control(interval, thread_event):
   if (DEBUG > 0) and (DEBUG >= 5):
     print("Entering pid_control, %s" % datetime.datetime.now().time())
   if (DEBUG > 0) and (DEBUG >= 3):
     start_time = time.time()
-    setpoint, y, x, pidcomponents, pidoutput = [], [], [], [], []
+    setpoint, y, x, pidcomponents, pidoutput, heater_state = [], [], [], [], [], []
    
   # output value will be between 0 and 100. need duty cycle for relay.  
   pid.output_limits = (0, 100) 
   pid.sample_time = interval  # update PID model every interval seconds
   pid.auto_mode = True
   # pid.setpoint = 10 # reset setpoint to value
-  heat_element = heater()
-
+  
   while not thread_event.isSet():
     if (DEBUG > 0) and (DEBUG >= 5):
       print("Entering pid_control loop, %s" % datetime.datetime.now().time())
@@ -238,12 +248,8 @@ def pid_control(interval, thread_event):
     # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
     system_temp = outside_container_temp.get_temperature()
     control_value = (pid(system_temp))
-    heat_element.duty_cycle = control_value
-    if control_value > 0:
-      heat_element.on()
-    else:
-      heat_element.off()
-    
+    heat_element.set_cycle(control_value)
+        
     if (DEBUG > 0) and (DEBUG >= 3):
       current_time = time.time()
       x += [current_time - start_time]
@@ -251,6 +257,7 @@ def pid_control(interval, thread_event):
       setpoint += [pid.setpoint]
       pidcomponents += [pid.components]
       pidoutput += [control_value]
+      heater_state += [heat_element.state]
 
     exit_time = time.time()
     # run every interval.  Calc wait time based on processing time.
@@ -264,7 +271,7 @@ def pid_control(interval, thread_event):
   if (DEBUG > 0) and (DEBUG >= 3):
     print("setpoint,x,y,pidoutput,Kp,Ki,Kd")
     for i in range(0, len(y)):
-        print("{},{},{},{},{}".format(setpoint[i],x[i],y[i],pidoutput[i],pidcomponents[i],))
+        print("{},{},{},{},{},{}".format(setpoint[i],x[i],y[i],pidoutput[i],pidcomponents[i],heater_state[i]))
         #print(y)
         #print(x)
   if (DEBUG > 0) and (DEBUG >= 5):
@@ -286,6 +293,7 @@ def start_menu():
 # ############
 if __name__ == '__main__':
     sensor = sensors()
+    heat_element = heater()
     thread_event = threading.Event()
 
     # initialise thread instances
@@ -293,6 +301,7 @@ if __name__ == '__main__':
     t_print_sensor_val = threading.Thread(target=print_sensor_values, args=(thread_event,))
     t_write_lcd = threading.Thread(target=write_lcd, args=(thread_event,))
     t_pid_control = threading.Thread(target=pid_control, args=(1, thread_event,))
+    t_heater_control = threading.Thread(target=heater_switch_control, args=(thread_event,))
     
     # start threads
     t_set_sensor_val.start()
@@ -303,6 +312,7 @@ if __name__ == '__main__':
       t_print_sensor_val.start()
     t_write_lcd.start()
     t_pid_control.start()
+    t_heater_control.start()
     
     while not thread_event.isSet():
       try:
