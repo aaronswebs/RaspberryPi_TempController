@@ -210,12 +210,13 @@ def pid_control(interval, thread_event):
 
     # grab sensor value directly - ie: do not rely on the set_sensor_val function for updates.
     # using a resolution of 9 bits has a 93.75ms response time.  12 bits is 750 ms.
-    relay_on(pid(outside_container_temp.get_temperature()))
+    system_temp = outside_container_temp.get_temperature()
+    relay_on(pid(system_temp))
     
     if (DEBUG > 0) and (DEBUG >= 3):
       current_time = time.time()
       x += [current_time - start_time]
-      y += [sensor.outside_container_temp]
+      y += [system_temp]
       setpoint += [pid.setpoint]
       pidcomponents += [pid.components]
       pidoutput += [pid(outside_container_temp.get_temperature())]
@@ -227,7 +228,7 @@ def pid_control(interval, thread_event):
     thread_event.wait(interval-(exit_time - entry_time))  
 
   if (DEBUG > 0) and (DEBUG >= 3):
-    print("setpoint,x,y,pidoutput,pidcomponents")
+    print("setpoint,x,y,pidoutput,Kp,Ki,Kd")
     for i in range(0, len(y)):
         print("{},{},{},{},{}".format(setpoint[i],x[i],y[i],pidoutput[i],pidcomponents[i],))
         #print(y)
