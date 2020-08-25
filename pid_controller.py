@@ -227,7 +227,7 @@ def pid_control(interval, thread_event):
 
   if (DEBUG > 0) and (DEBUG >= 3):
     for points in y:
-        print("{},{},{},{},{},{}\n".format(points,setpoint,x,y,pidoutput,pidcomponents,))
+        print("{},{},{},{},{}\n".format(setpoint[points],x[points],y[points],pidoutput[points],pidcomponents[points],))
         #print(y)
         #print(x)
   if (DEBUG > 0) and (DEBUG >= 5):
